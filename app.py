@@ -659,6 +659,7 @@ def admin_promote_user(id):
         flash('Error promoting user.', 'danger')
         return redirect(url_for('admin_users'))
 
+
 @app.route('/admin/user/<int:id>/demote', methods=['POST'])
 @login_required
 def admin_demote_user(id):
@@ -667,7 +668,7 @@ def admin_demote_user(id):
         return redirect(url_for('index'))
     
     try:
-        user = User.query.query.get_or_404(id)
+        user = User.query.get_or_404(id)  # FIXED: was User.query.query.get_or_404
         if user.id == current_user.id:
             flash('You cannot modify your own admin status.', 'warning')
             return redirect(url_for('admin_users'))
