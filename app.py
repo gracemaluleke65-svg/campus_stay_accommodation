@@ -3,20 +3,21 @@ import stripe
 import json
 import random
 import traceback
+import logging
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from datetime import datetime
-import logging
 
 from config import Config
 from models import db, User, Accommodation, Booking, Review, Favorite
 from forms import RegistrationForm, LoginForm, AccommodationForm, BookingForm, ReviewForm, SearchForm
 
-# Setup logging for debugging on Render
+# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Create Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -32,6 +33,23 @@ stripe.api_key = app.config['STRIPE_SECRET_KEY']
 # Ensure upload directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(os.path.join('static', 'images', 'team'), exist_ok=True)
+
+# CRITICAL: Create database tables before first request
+@app.before_request
+def create_tables():
+    # This runs before the first request
+    if not hasattr(app, 'tables_created'):
+        with app.app_context():
+            try:
+                logger.info("Creating database tables...")
+                db.create_all()
+                logger.info("Database tables created successfully!")
+                seed_admin()
+                logger.info("Admin seeding completed!")
+                app.tables_created = True
+            except Exception as e:
+                logger.error(f"Error creating tables: {e}")
+                logger.error(traceback.format_exc())
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -68,27 +86,26 @@ def allowed_file(filename):
 def seed_admin():
     """Seed admin user - safe to run multiple times"""
     try:
-        with app.app_context():
-            admin = User.query.filter_by(email=app.config['ADMIN_EMAIL']).first()
-            if not admin:
-                admin = User(
-                    full_name='System Admin',
-                    email=app.config['ADMIN_EMAIL'],
-                    student_number='00000000',
-                    id_number='0000000000000',
-                    phone='0000000000',
-                    is_admin=True
-                )
+        admin = User.query.filter_by(email=app.config['ADMIN_EMAIL']).first()
+        if not admin:
+            admin = User(
+                full_name='System Admin',
+                email=app.config['ADMIN_EMAIL'],
+                student_number='00000000',
+                id_number='0000000000000',
+                phone='0000000000',
+                is_admin=True
+            )
+            admin.set_password(app.config['ADMIN_PASSWORD'])
+            db.session.add(admin)
+            db.session.commit()
+            logger.info('Admin user created successfully')
+        else:
+            # Update admin password if changed in env vars
+            if not admin.check_password(app.config['ADMIN_PASSWORD']):
                 admin.set_password(app.config['ADMIN_PASSWORD'])
-                db.session.add(admin)
                 db.session.commit()
-                logger.info('Admin user created successfully')
-            else:
-                # Update admin password if changed in env vars
-                if not admin.check_password(app.config['ADMIN_PASSWORD']):
-                    admin.set_password(app.config['ADMIN_PASSWORD'])
-                    db.session.commit()
-                    logger.info('Admin password updated')
+                logger.info('Admin password updated')
     except Exception as e:
         logger.error(f"Error seeding admin: {e}")
         db.session.rollback()
@@ -106,7 +123,6 @@ def internal_error(error):
 @app.route('/')
 def index():
     try:
-        # Use func.random() for PostgreSQL/SQLite compatibility
         featured = Accommodation.query.filter_by(is_active=True).order_by(db.func.random()).limit(3).all()
         return render_template('index.html', featured=featured, get_amenity_icon=get_amenity_icon)
     except Exception as e:
@@ -312,7 +328,6 @@ def book(accommodation_id):
         
         total_price = accommodation.price_per_month * months
         
-        # Validate minimum amount (Stripe requires at least 50 cents)
         if total_price < 0.5:
             flash('Total price must be at least R 0.50', 'danger')
             return redirect(url_for('accommodation_detail', id=accommodation_id))
@@ -659,7 +674,6 @@ def admin_promote_user(id):
         flash('Error promoting user.', 'danger')
         return redirect(url_for('admin_users'))
 
-
 @app.route('/admin/user/<int:id>/demote', methods=['POST'])
 @login_required
 def admin_demote_user(id):
@@ -668,7 +682,7 @@ def admin_demote_user(id):
         return redirect(url_for('index'))
     
     try:
-        user = User.query.get_or_404(id)  # FIXED: was User.query.query.get_or_404
+        user = User.query.get_or_404(id)  # FIXED: removed double .query
         if user.id == current_user.id:
             flash('You cannot modify your own admin status.', 'warning')
             return redirect(url_for('admin_users'))
@@ -714,14 +728,10 @@ def my_bookings():
         flash('Error loading your bookings.', 'danger')
         return render_template('my_bookings.html', bookings=[])
 
-# Production entry point for Render
+# Production entry point
 def create_app():
     """Application factory for production"""
-    with app.app_context():
-        db.create_all()
-        seed_admin()
     return app
 
 if __name__ == '__main__':
-    create_app()
     app.run(debug=False, host='0.0.0.0', port=5000)
