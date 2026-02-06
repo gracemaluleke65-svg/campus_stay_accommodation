@@ -790,7 +790,7 @@
                     <div class="property-image">
                         <!-- Updated to support both Cloudinary URLs and local filenames -->
                         {% if acc.image_filename %}
-                            {% if 'http' in acc.image_filename %}
+                            {% if acc.image_filename.startswith('http') %}
                                 <img src="{{ acc.image_filename }}" alt="{{ acc.title }}" loading="lazy">
                             {% else %}
                                 <img src="{{ url_for('static', filename='uploads/' + acc.image_filename) }}" alt="{{ acc.title }}" loading="lazy">

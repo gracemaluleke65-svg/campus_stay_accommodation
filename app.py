@@ -695,14 +695,11 @@ def admin_new_accommodation():
             if form.study_area.data == '1': amenities.append('study_area')
             acc.set_amenities_list(amenities)
             
-            # Upload to Cloudinary instead of local storage
-            if form.image.data:
-                image_url = upload_image(form.image.data, folder="campus_stay/accommodations")
-                if image_url:
-                    acc.image_filename = image_url
-                    logger.info(f"Image uploaded to Cloudinary: {image_url}")
-                else:
-                    flash('Image upload failed. Please try again.', 'warning')
+            # Get image URL from Cloudinary widget (browser upload)
+            image_url = request.form.get('image_url')
+            if image_url:
+                acc.image_filename = image_url
+                logger.info(f"Image URL saved from Cloudinary: {image_url}")
             
             db.session.add(acc)
             db.session.commit()
@@ -747,19 +744,16 @@ def admin_edit_accommodation(id):
             if form.study_area.data == '1': amenities.append('study_area')
             acc.set_amenities_list(amenities)
             
-            # Upload new image to Cloudinary if provided
-            if form.image.data:
+            # Get image URL from Cloudinary widget (browser upload)
+            image_url = request.form.get('image_url')
+            if image_url and image_url != acc.image_filename:
                 # Delete old Cloudinary image if exists
                 if acc.image_filename and 'cloudinary' in acc.image_filename:
                     delete_image(acc.image_filename)
                 
-                # Upload new image
-                image_url = upload_image(form.image.data, folder="campus_stay/accommodations")
-                if image_url:
-                    acc.image_filename = image_url
-                    logger.info(f"Image updated to Cloudinary: {image_url}")
-                else:
-                    flash('Image upload failed.', 'warning')
+                # Save new image URL
+                acc.image_filename = image_url
+                logger.info(f"Image updated from Cloudinary: {image_url}")
             
             db.session.commit()
             logger.info(f"Accommodation updated: {acc.title}")

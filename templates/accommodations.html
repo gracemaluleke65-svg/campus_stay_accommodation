@@ -136,7 +136,6 @@
         position: relative;
         opacity: 1;
         transform: translateY(0);
-        transition: all 0.3s ease;
     }
 
     .property-card.filtered-out {
@@ -498,6 +497,48 @@
         margin-bottom: 1.5rem;
     }
 
+    /* Toast Notifications */
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        z-index: 9999;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 0.3s ease;
+        border-left: 4px solid #FF6B35;
+    }
+
+    .toast-success { border-left-color: #10B981; }
+    .toast-danger { border-left-color: #EF4444; }
+    .toast-info { border-left-color: #FF6B35; }
+
+    .toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .toast-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .toast-content i {
+        font-size: 1.25rem;
+    }
+
+    .toast-success .toast-content i { color: #10B981; }
+    .toast-danger .toast-content i { color: #EF4444; }
+    .toast-info .toast-content i { color: #FF6B35; }
+
     /* Pagination */
     .pagination-wrapper {
         display: flex;
@@ -554,7 +595,7 @@
         <div class="search-card">
             <form id="filterForm" method="GET" action="{{ url_for('accommodations') }}">
                 <div class="row g-3 align-items-end">
-                    <div class="col-lg-4 col-md-6">
+                    <div class="col-lg-3 col-md-6">
                         <label class="form-label">
                             <i class="bi bi-geo-alt me-1"></i>Location or Name
                         </label>
@@ -564,8 +605,41 @@
                                placeholder="Search by location or property name..."
                                value="{{ request.args.get('search', '') }}">
                     </div>
-                   
                     
+                    <div class="col-lg-2 col-md-6">
+                        <label class="form-label">
+                            <i class="bi bi-currency-dollar me-1"></i>Min Price
+                        </label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="minPrice"
+                               placeholder="Min"
+                               value="{{ request.args.get('min_price', '') }}">
+                    </div>
+                    
+                    <div class="col-lg-2 col-md-6">
+                        <label class="form-label">
+                            <i class="bi bi-currency-dollar me-1"></i>Max Price
+                        </label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="maxPrice"
+                               placeholder="Max"
+                               value="{{ request.args.get('max_price', '') }}">
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label">
+                            <i class="bi bi-door-closed me-1"></i>Room Type
+                        </label>
+                        <select class="form-select" id="roomType">
+                            <option value="">All Types</option>
+                            <option value="single" {{ 'selected' if request.args.get('room_type') == 'single' else '' }}>Single</option>
+                            <option value="shared" {{ 'selected' if request.args.get('room_type') == 'shared' else '' }}>Shared</option>
+                            <option value="apartment" {{ 'selected' if request.args.get('room_type') == 'apartment' else '' }}>Apartment</option>
+                            <option value="studio" {{ 'selected' if request.args.get('room_type') == 'studio' else '' }}>Studio</option>
+                        </select>
+                    </div>
                    
                     <div class="col-lg-2 col-md-6">
                         <button type="button" id="applyFilters" class="search-btn">
@@ -614,9 +688,9 @@
                  data-available="{{ acc.available_spots() }}">
                 <div class="property-card">
                     <div class="property-image-wrapper">
-                        {# Cloudinary image handling - check if image_filename starts with http #}
+                        {# Cloudinary image handling #}
                         {% if acc.image_filename %}
-                            {% if 'http' in acc.image_filename %}
+                            {% if acc.image_filename.startswith('http') %}
                                 <img src="{{ acc.image_filename }}" 
                                      alt="{{ acc.title }}" 
                                      class="property-image"
@@ -990,7 +1064,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Toggle favorite function
     window.toggleFavorite = async function(accId, btn) {
-        if (!{{ 'true' if current_user.is_authenticated else 'false' }}) {
+        if (!{{ current_user.is_authenticated|tojson }}) {
             window.location.href = "{{ url_for('login') }}";
             return;
         }
@@ -1044,50 +1118,6 @@ function showToast(message, type = 'info') {
     `;
     
     document.body.appendChild(toast);
-    
-    // Add CSS for toast if not already present
-    if (!document.querySelector('#toast-styles')) {
-        const style = document.createElement('style');
-        style.id = 'toast-styles';
-        style.textContent = `
-            .toast {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: white;
-                border-radius: 12px;
-                padding: 1rem 1.5rem;
-                box-shadow: var(--shadow-xl);
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                z-index: 9999;
-                transform: translateX(100%);
-                opacity: 0;
-                transition: all 0.3s ease;
-                border-left: 4px solid var(--primary-orange);
-            }
-            .toast-success { border-left-color: #10B981; }
-            .toast-danger { border-left-color: #EF4444; }
-            .toast-info { border-left-color: var(--primary-orange); }
-            .toast.show {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            .toast-content {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-            }
-            .toast-content i {
-                font-size: 1.25rem;
-            }
-            .toast-success .toast-content i { color: #10B981; }
-            .toast-danger .toast-content i { color: #EF4444; }
-            .toast-info .toast-content i { color: var(--primary-orange); }
-        `;
-        document.head.appendChild(style);
-    }
     
     // Show toast
     setTimeout(() => toast.classList.add('show'), 10);

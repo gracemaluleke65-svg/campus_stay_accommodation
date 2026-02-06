@@ -357,6 +357,14 @@
         margin-bottom: 1.5rem;
     }
 
+    /* Toast Notifications */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .page-title {
@@ -420,10 +428,10 @@
                     <div class="card-image-wrapper">
                         {# Cloudinary URL or local image or fallback #}
                         {% if acc.image_filename %}
-                            {% if 'http' in acc.image_filename %}
-                                <img src="{{ acc.image_filename }}" alt="{{ acc.title }}" loading="lazy">
+                            {% if acc.image_filename.startswith('http') %}
+                                <img src="{{ acc.image_filename }}" alt="{{ acc.title }}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'">
                             {% else %}
-                                <img src="{{ url_for('static', filename='uploads/' + acc.image_filename) }}" alt="{{ acc.title }}" loading="lazy">
+                                <img src="{{ url_for('static', filename='uploads/' + acc.image_filename) }}" alt="{{ acc.title }}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'">
                             {% endif %}
                         {% else %}
                             <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="{{ acc.title }}" loading="lazy">
@@ -518,16 +526,67 @@
 
 {% block extra_js %}
 <script>
+    // Toast notification function
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 250px; animation: slideIn 0.3s ease;';
+        
+        const icons = {
+            success: 'check-circle',
+            danger: 'exclamation-triangle',
+            warning: 'exclamation-circle',
+            info: 'info-circle'
+        };
+        
+        toast.innerHTML = `
+            <i class="bi bi-${icons[type] || 'info-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+
     // Remove favorite with animation
     async function removeFavorite(accId) {
         if (!confirm('Remove this property from your favorites?')) return;
         
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                         document.querySelector('input[name="csrf_token"]')?.value;
+        
         try {
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            
+            if (csrfToken) {
+                headers['X-CSRFToken'] = csrfToken;
+            }
+            
             const response = await fetch(`/favorite/toggle/${accId}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: headers
             });
             
             const data = await response.json();
@@ -535,7 +594,8 @@
             if (data.status === 'removed') {
                 // Animate card removal
                 const card = document.getElementById(`favorite-card-${accId}`);
-                card.style.transform = 'scale(0.9) opacity(0)';
+                card.style.transform = 'scale(0.9)';
+                card.style.opacity = '0';
                 card.style.transition = 'all 0.3s ease';
                 
                 setTimeout(() => {
@@ -551,12 +611,15 @@
                         if (remaining.length === 0) {
                             location.reload(); // Reload to show empty state
                         } else {
-                            showToast('Removed from favorites', 'info');
+                            showToast('Removed from favorites', 'success');
                         }
                     }, 300);
                 }, 300);
+            } else if (data.status === 'error') {
+                showToast(data.message || 'Error removing favorite', 'danger');
             }
         } catch (error) {
+            console.error('Error:', error);
             showToast('Error removing favorite', 'danger');
         }
     }

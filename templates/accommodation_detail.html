@@ -42,7 +42,7 @@
         border-radius: 24px;
         overflow: hidden;
         box-shadow: var(--shadow-xl);
-        background: #f0f0f0; /* Fallback background */
+        background: #f0f0f0;
     }
 
     .main-image {
@@ -50,7 +50,8 @@
         height: 500px;
         object-fit: cover;
         transition: transform 0.5s ease;
-        display: block; /* Remove extra space below image */
+        display: block;
+        background-color: #f0f0f0;
     }
 
     .image-gallery:hover .main-image {
@@ -665,24 +666,6 @@
             font-size: 1.1rem;
         }
     }
-
-    /* Image loading states */
-    .main-image {
-        background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
-        background-size: 200% 100%;
-        animation: 1.5s shine linear infinite;
-    }
-
-    .main-image[src] {
-        animation: none;
-        background: transparent;
-    }
-
-    @keyframes shine {
-        to {
-            background-position-x: -200%;
-        }
-    }
 </style>
 {% endblock %}
 
@@ -704,24 +687,15 @@
                 <!-- Image Gallery -->
                 <div class="image-gallery mb-4">
                     {% if accommodation.image_filename %}
-                        {% if 'http' in accommodation.image_filename %}
-                            <!-- Cloudinary Image -->
-                            <img src="{{ accommodation.image_filename }}" 
-                                 class="main-image" 
-                                 alt="{{ accommodation.title }}"
-                                 loading="eager"
-                                 onerror="this.src='https://res.cloudinary.com/dnxuhsfrp/image/upload/v1/campus_stay/defaults/default-accommodation.jpg'">
-                        {% else %}
-                            <!-- Legacy Local Image -->
-                            <img src="{{ url_for('static', filename='uploads/' + accommodation.image_filename) }}" 
-                                 class="main-image" 
-                                 alt="{{ accommodation.title }}"
-                                 loading="eager"
-                                 onerror="this.src='{{ url_for('static', filename='images/default-accommodation.jpg') }}'">
-                        {% endif %}
+                        <!-- Cloudinary Image with optimization -->
+                        <img src="{{ accommodation.image_filename | replace('upload/', 'upload/c_fill,w_1200,h_800,q_auto,f_auto/') }}" 
+                             class="main-image" 
+                             alt="{{ accommodation.title }}"
+                             loading="eager"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-accommodation.jpg') }}'">
                     {% else %}
                         <!-- Default Fallback -->
-                        <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
+                        <img src="{{ url_for('static', filename='images/default-accommodation.jpg') }}" 
                              class="main-image" 
                              alt="{{ accommodation.title }}"
                              loading="eager">
@@ -985,7 +959,6 @@
         const pricePerMonth = {{ accommodation.price_per_month }};
         const totalElement = document.getElementById('totalPrice');
         const durationLabel = document.getElementById('durationLabel');
-        const durationText = document.getElementById('durationText');
         
         let months, label;
         

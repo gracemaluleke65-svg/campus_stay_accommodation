@@ -43,6 +43,7 @@
         min-height: 180px;
         position: relative;
         overflow: hidden;
+        background: #f0f0f0;
     }
 
     .booking-image img {
@@ -52,6 +53,11 @@
         position: absolute;
         top: 0;
         left: 0;
+        transition: transform 0.3s ease;
+    }
+
+    .booking-card:hover .booking-image img {
+        transform: scale(1.05);
     }
 
     .booking-content {
@@ -433,13 +439,21 @@
             <div class="booking-card d-flex flex-wrap">
                 <div class="booking-image">
                     {% if booking.accommodation.image_filename %}
-                        {% if 'http' in booking.accommodation.image_filename %}
-                            <img src="{{ booking.accommodation.image_filename }}" alt="{{ booking.accommodation.title }}">
+                        {% if booking.accommodation.image_filename.startswith('http://') or booking.accommodation.image_filename.startswith('https://') or 'cloudinary' in booking.accommodation.image_filename %}
+                            <img src="{{ booking.accommodation.image_filename }}" 
+                                 alt="{{ booking.accommodation.title }}"
+                                 loading="lazy"
+                                 onerror="this.src='https://placehold.co/600x400/FF6B35/FFFFFF?text=Image+Error'">
                         {% else %}
-                            <img src="{{ url_for('static', filename='uploads/' + booking.accommodation.image_filename) }}" alt="{{ booking.accommodation.title }}">
+                            <img src="{{ url_for('static', filename='uploads/' + booking.accommodation.image_filename) }}" 
+                                 alt="{{ booking.accommodation.title }}"
+                                 loading="lazy"
+                                 onerror="this.src='https://placehold.co/600x400/FF6B35/FFFFFF?text=No+Image'">
                         {% endif %}
                     {% else %}
-                        <img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="{{ booking.accommodation.title }}">
+                        <img src="https://placehold.co/600x400/FF6B35/FFFFFF?text=No+Image" 
+                             alt="{{ booking.accommodation.title }}"
+                             loading="lazy">
                     {% endif %}
                 </div>
                 <div class="booking-content">
