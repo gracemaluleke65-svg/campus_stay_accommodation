@@ -42,6 +42,7 @@
         border-radius: 24px;
         overflow: hidden;
         box-shadow: var(--shadow-xl);
+        background: #f0f0f0; /* Fallback background */
     }
 
     .main-image {
@@ -49,6 +50,7 @@
         height: 500px;
         object-fit: cover;
         transition: transform 0.5s ease;
+        display: block; /* Remove extra space below image */
     }
 
     .image-gallery:hover .main-image {
@@ -663,6 +665,24 @@
             font-size: 1.1rem;
         }
     }
+
+    /* Image loading states */
+    .main-image {
+        background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+        background-size: 200% 100%;
+        animation: 1.5s shine linear infinite;
+    }
+
+    .main-image[src] {
+        animation: none;
+        background: transparent;
+    }
+
+    @keyframes shine {
+        to {
+            background-position-x: -200%;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -683,8 +703,29 @@
             <div class="col-lg-8">
                 <!-- Image Gallery -->
                 <div class="image-gallery mb-4">
-                    <img src="{{ url_for('static', filename='uploads/' + accommodation.image_filename) if accommodation.image_filename else 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80' }}" 
-                         class="main-image" alt="{{ accommodation.title }}">
+                    {% if accommodation.image_filename %}
+                        {% if 'http' in accommodation.image_filename %}
+                            <!-- Cloudinary Image -->
+                            <img src="{{ accommodation.image_filename }}" 
+                                 class="main-image" 
+                                 alt="{{ accommodation.title }}"
+                                 loading="eager"
+                                 onerror="this.src='https://res.cloudinary.com/dnxuhsfrp/image/upload/v1/campus_stay/defaults/default-accommodation.jpg'">
+                        {% else %}
+                            <!-- Legacy Local Image -->
+                            <img src="{{ url_for('static', filename='uploads/' + accommodation.image_filename) }}" 
+                                 class="main-image" 
+                                 alt="{{ accommodation.title }}"
+                                 loading="eager"
+                                 onerror="this.src='{{ url_for('static', filename='images/default-accommodation.jpg') }}'">
+                        {% endif %}
+                    {% else %}
+                        <!-- Default Fallback -->
+                        <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
+                             class="main-image" 
+                             alt="{{ accommodation.title }}"
+                             loading="eager">
+                    {% endif %}
                     <div class="image-overlay"></div>
                     <div class="gallery-badge">
                         <i class="bi bi-geo-alt-fill me-1"></i>

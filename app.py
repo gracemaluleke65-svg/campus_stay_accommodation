@@ -12,6 +12,7 @@ from datetime import datetime
 from config import Config
 from models import db, User, Accommodation, Booking, Review, Favorite
 from forms import RegistrationForm, LoginForm, AccommodationForm, BookingForm, ReviewForm, SearchForm
+from cloudinary_config import init_cloudinary, upload_image, delete_image
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -20,6 +21,9 @@ logger = logging.getLogger(__name__)
 # Create Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Initialize Cloudinary
+init_cloudinary(app)
 
 # Initialize extensions
 db.init_app(app)
@@ -30,7 +34,7 @@ login_manager.login_message_category = 'info'
 
 stripe.api_key = app.config['STRIPE_SECRET_KEY']
 
-# Ensure upload directories exist
+# Ensure upload directories exist (for local fallback if needed)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(os.path.join('static', 'images', 'team'), exist_ok=True)
 
@@ -81,7 +85,7 @@ def get_amenity_icon(amenity):
     return icons.get(amenity, 'bi-check')
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 def seed_admin():
     """Seed admin user - safe to run multiple times"""
@@ -480,7 +484,7 @@ def admin_dashboard():
     try:
         stats = {
             'total_users': User.query.count(),
-            'total_accommodations': Accommodation.query.count(),
+            'total_accommodations': Accommodation.query.filter_by(is_active=True).count(),
             'active_accommodations': Accommodation.query.filter_by(is_active=True).count(),
             'total_bookings': Booking.query.count(),
             'paid_bookings': Booking.query.filter_by(status='paid').count(),
@@ -525,12 +529,14 @@ def admin_new_accommodation():
             if form.study_area.data == '1': amenities.append('study_area')
             acc.set_amenities_list(amenities)
             
+            # Upload to Cloudinary instead of local storage
             if form.image.data:
-                filename = secure_filename(form.image.data.filename)
-                timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-                filename = f"{timestamp}_{filename}"
-                form.image.data.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                acc.image_filename = filename
+                image_url = upload_image(form.image.data, folder="campus_stay/accommodations")
+                if image_url:
+                    acc.image_filename = image_url
+                    logger.info(f"Image uploaded to Cloudinary: {image_url}")
+                else:
+                    flash('Image upload failed. Please try again.', 'warning')
             
             db.session.add(acc)
             db.session.commit()
@@ -575,17 +581,19 @@ def admin_edit_accommodation(id):
             if form.study_area.data == '1': amenities.append('study_area')
             acc.set_amenities_list(amenities)
             
+            # Upload new image to Cloudinary if provided
             if form.image.data:
-                if acc.image_filename:
-                    old_path = os.path.join(app.config['UPLOAD_FOLDER'], acc.image_filename)
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
+                # Delete old Cloudinary image if exists
+                if acc.image_filename and 'cloudinary' in acc.image_filename:
+                    delete_image(acc.image_filename)
                 
-                filename = secure_filename(form.image.data.filename)
-                timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-                filename = f"{timestamp}_{filename}"
-                form.image.data.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                acc.image_filename = filename
+                # Upload new image
+                image_url = upload_image(form.image.data, folder="campus_stay/accommodations")
+                if image_url:
+                    acc.image_filename = image_url
+                    logger.info(f"Image updated to Cloudinary: {image_url}")
+                else:
+                    flash('Image upload failed.', 'warning')
             
             db.session.commit()
             logger.info(f"Accommodation updated: {acc.title}")
@@ -602,7 +610,7 @@ def admin_edit_accommodation(id):
         form.pool.data = '1' if 'pool' in current_amenities else '0'
         form.study_area.data = '1' if 'study_area' in current_amenities else '0'
         
-        return render_template('admin/accommodation_form.html', form=form, title='Edit Accommodation')
+        return render_template('admin/accommodation_form.html', form=form, title='Edit Accommodation', accommodation=acc)
     except Exception as e:
         logger.error(f"Edit accommodation error: {e}")
         db.session.rollback()
@@ -619,10 +627,10 @@ def admin_delete_accommodation(id):
     try:
         acc = Accommodation.query.get_or_404(id)
         
-        if acc.image_filename:
-            image_path = os.path.join(app.config['UPLOAD_FOLDER'], acc.image_filename)
-            if os.path.exists(image_path):
-                os.remove(image_path)
+        # Delete image from Cloudinary if exists
+        if acc.image_filename and 'cloudinary' in acc.image_filename:
+            delete_image(acc.image_filename)
+            logger.info(f"Deleted image from Cloudinary: {acc.image_filename}")
         
         db.session.delete(acc)
         db.session.commit()
@@ -682,7 +690,7 @@ def admin_demote_user(id):
         return redirect(url_for('index'))
     
     try:
-        user = User.query.get_or_404(id)  # FIXED: removed double .query
+        user = User.query.get_or_404(id)
         if user.id == current_user.id:
             flash('You cannot modify your own admin status.', 'warning')
             return redirect(url_for('admin_users'))

@@ -379,6 +379,34 @@
             padding-top: 76px;
             min-height: calc(100vh - 300px);
         }
+
+        /* Image loading states for Cloudinary */
+        .img-loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .accommodation-img {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .accommodation-img:hover {
+            transform: scale(1.05);
+        }
+
+        .accommodation-img.loaded {
+            opacity: 1;
+        }
+
+        .accommodation-img:not(.loaded) {
+            opacity: 0;
+        }
     </style>
     
     {% block extra_css %}{% endblock %}
@@ -637,6 +665,40 @@
                 bsAlert.close();
             }, 5000);
         });
+
+        // Image loading handler for Cloudinary images
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('.accommodation-img');
+            images.forEach(img => {
+                if (img.complete) {
+                    img.classList.add('loaded');
+                } else {
+                    img.addEventListener('load', () => img.classList.add('loaded'));
+                    img.addEventListener('error', () => {
+                        // Fallback to default image if Cloudinary image fails
+                        img.src = '/static/images/default-accommodation.jpg';
+                        img.classList.add('loaded');
+                    });
+                }
+            });
+        });
+
+        // Lazy loading for Cloudinary images
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src || img.src;
+                        observer.unobserve(img);
+                    }
+                });
+            });
+
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
     </script>
     
     {% block extra_js %}{% endblock %}

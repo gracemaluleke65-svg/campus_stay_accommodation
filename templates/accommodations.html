@@ -614,9 +614,27 @@
                  data-available="{{ acc.available_spots() }}">
                 <div class="property-card">
                     <div class="property-image-wrapper">
-                        <img src="{{ url_for('static', filename='uploads/' + acc.image_filename) if acc.image_filename else 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" 
-                             alt="{{ acc.title }}" 
-                             class="property-image">
+                        {# Cloudinary image handling - check if image_filename starts with http #}
+                        {% if acc.image_filename %}
+                            {% if 'http' in acc.image_filename %}
+                                <img src="{{ acc.image_filename }}" 
+                                     alt="{{ acc.title }}" 
+                                     class="property-image"
+                                     loading="lazy"
+                                     onerror="this.src='https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='uploads/' + acc.image_filename) }}" 
+                                     alt="{{ acc.title }}" 
+                                     class="property-image"
+                                     loading="lazy"
+                                     onerror="this.src='https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'">
+                            {% endif %}
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                                 alt="{{ acc.title }}" 
+                                 class="property-image"
+                                 loading="lazy">
+                        {% endif %}
                         
                         <!-- Availability Badge -->
                         {% set spots = acc.available_spots() %}

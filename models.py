@@ -43,7 +43,7 @@ class Accommodation(db.Model):
     price_per_month = db.Column(db.Float, nullable=False)
     capacity = db.Column(db.Integer, nullable=False)
     current_occupancy = db.Column(db.Integer, default=0, nullable=False)
-    image_filename = db.Column(db.String(100))
+    image_filename = db.Column(db.String(500))  # Increased to 500 for Cloudinary URLs
     amenities = db.Column(db.String(500))
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     admin_id = db.Column(db.Integer, db.ForeignKey('user.id'))

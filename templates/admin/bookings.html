@@ -341,6 +341,7 @@
         height: 48px;
         border-radius: 10px;
         object-fit: cover;
+        background: var(--light-bg);
     }
 
     .property-info {
@@ -689,12 +690,29 @@
                                 <td>
                                     <div class="property-cell">
                                         {% if booking.accommodation.image_filename %}
-                                        <img src="{{ url_for('static', filename='uploads/' + booking.accommodation.image_filename) }}" 
-                                             alt="" class="property-thumb">
+                                            {% if 'http' in booking.accommodation.image_filename %}
+                                                <!-- Cloudinary Image -->
+                                                <img src="{{ booking.accommodation.image_filename }}" 
+                                                     alt="{{ booking.accommodation.title }}"
+                                                     class="property-thumb"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="property-thumb bg-light d-flex align-items-center justify-content-center" style="display: none;">
+                                                    <i class="bi bi-house text-muted"></i>
+                                                </div>
+                                            {% else %}
+                                                <!-- Legacy Local Image -->
+                                                <img src="{{ url_for('static', filename='uploads/' + booking.accommodation.image_filename) }}" 
+                                                     alt="{{ booking.accommodation.title }}"
+                                                     class="property-thumb"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="property-thumb bg-light d-flex align-items-center justify-content-center" style="display: none;">
+                                                    <i class="bi bi-house text-muted"></i>
+                                                </div>
+                                            {% endif %}
                                         {% else %}
-                                        <div class="property-thumb bg-light d-flex align-items-center justify-content-center">
-                                            <i class="bi bi-house text-muted"></i>
-                                        </div>
+                                            <div class="property-thumb bg-light d-flex align-items-center justify-content-center">
+                                                <i class="bi bi-house text-muted"></i>
+                                            </div>
                                         {% endif %}
                                         <div class="property-info">
                                             <span class="property-title">{{ booking.accommodation.title }}</span>

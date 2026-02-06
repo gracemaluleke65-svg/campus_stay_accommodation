@@ -213,11 +213,51 @@
     }
 
     .file-preview {
-        max-width: 200px;
-        max-height: 150px;
+        max-width: 100%;
+        max-height: 300px;
         border-radius: 12px;
         margin-top: 1rem;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        object-fit: cover;
+    }
+
+    /* Existing Image Display */
+    .existing-image-container {
+        position: relative;
+        display: inline-block;
+        margin-top: 1rem;
+    }
+
+    .existing-image-label {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--primary-orange);
+        color: white;
+        padding: 0.25rem 1rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+        z-index: 10;
+    }
+
+    .change-image-btn {
+        margin-top: 1rem;
+        padding: 0.5rem 1.5rem;
+        background: white;
+        border: 2px solid var(--primary-orange);
+        color: var(--primary-orange);
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .change-image-btn:hover {
+        background: var(--primary-orange);
+        color: white;
     }
 
     /* Amenities Grid */
@@ -553,15 +593,45 @@
                                            id="{{ form.image.id }}" 
                                            class="file-upload-input"
                                            accept="image/*">
-                                    <div class="file-upload-content">
-                                        <div class="file-upload-icon">
-                                            <i class="bi bi-cloud-arrow-up"></i>
+                                    
+                                    <!-- Show existing image if editing -->
+                                    {% if accommodation and accommodation.image_filename %}
+                                        <div id="existingImageContainer" class="existing-image-container">
+                                            <span class="existing-image-label">Current Image</span>
+                                            {% if 'http' in accommodation.image_filename %}
+                                                <img src="{{ accommodation.image_filename }}" alt="Current" class="file-preview">
+                                            {% else %}
+                                                <img src="{{ url_for('static', filename='uploads/' + accommodation.image_filename) }}" alt="Current" class="file-preview">
+                                            {% endif %}
+                                            <br>
+                                            <button type="button" class="change-image-btn" onclick="triggerFileSelect()">
+                                                <i class="bi bi-arrow-repeat"></i> Change Image
+                                            </button>
                                         </div>
-                                        <div class="file-upload-text">
-                                            <strong>Click to upload or drag and drop</strong>
-                                            SVG, PNG, JPG or GIF (max. 800x400px)
+                                        
+                                        <!-- Hidden upload content initially -->
+                                        <div id="uploadContent" class="file-upload-content d-none">
+                                            <div class="file-upload-icon">
+                                                <i class="bi bi-cloud-arrow-up"></i>
+                                            </div>
+                                            <div class="file-upload-text">
+                                                <strong>Click to upload or drag and drop</strong>
+                                                SVG, PNG, JPG or GIF (max. 800x400px)
+                                            </div>
                                         </div>
-                                    </div>
+                                    {% else %}
+                                        <!-- Default upload content for new accommodations -->
+                                        <div id="uploadContent" class="file-upload-content">
+                                            <div class="file-upload-icon">
+                                                <i class="bi bi-cloud-arrow-up"></i>
+                                            </div>
+                                            <div class="file-upload-text">
+                                                <strong>Click to upload or drag and drop</strong>
+                                                SVG, PNG, JPG or GIF (max. 800x400px)
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    
                                     <img id="imagePreview" class="file-preview d-none" alt="Preview">
                                 </div>
                                 {% if form.image.errors %}
@@ -569,6 +639,10 @@
                                         {% for error in form.image.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+                                <div class="form-text mt-2">
+                                    <i class="bi bi-info-circle"></i> 
+                                    Images are stored securely on Cloudinary. Max file size: 5MB.
+                                </div>
                             </div>
 
                             <!-- Amenities -->
@@ -629,17 +703,39 @@
     // File Upload Preview
     const fileInput = document.getElementById('{{ form.image.id }}');
     const fileWrapper = document.getElementById('fileUpload');
-    const fileContent = fileWrapper.querySelector('.file-upload-content');
+    const uploadContent = document.getElementById('uploadContent');
     const imagePreview = document.getElementById('imagePreview');
+    const existingImageContainer = document.getElementById('existingImageContainer');
+
+    function triggerFileSelect() {
+        fileInput.click();
+    }
 
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                fileInput.value = '';
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 imagePreview.src = e.target.result;
                 imagePreview.classList.remove('d-none');
-                fileContent.classList.add('d-none');
+                
+                // Hide existing image if present
+                if (existingImageContainer) {
+                    existingImageContainer.classList.add('d-none');
+                }
+                
+                // Hide upload content
+                if (uploadContent) {
+                    uploadContent.classList.add('d-none');
+                }
+                
                 fileWrapper.classList.add('has-file');
             };
             reader.readAsDataURL(file);
@@ -666,19 +762,31 @@
         
         const files = e.dataTransfer.files;
         if (files.length) {
+            // Validate file size
+            if (files[0].size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                return;
+            }
+            
             fileInput.files = files;
             const event = new Event('change');
             fileInput.dispatchEvent(event);
         }
     });
 
-    // Click to remove preview
+    // Click to remove preview and restore previous state
     imagePreview.addEventListener('click', function() {
         fileInput.value = '';
         imagePreview.classList.add('d-none');
         imagePreview.src = '';
-        fileContent.classList.remove('d-none');
         fileWrapper.classList.remove('has-file');
+        
+        // Restore existing image if editing
+        if (existingImageContainer) {
+            existingImageContainer.classList.remove('d-none');
+        } else if (uploadContent) {
+            uploadContent.classList.remove('d-none');
+        }
     });
 
     // Form validation enhancement
@@ -698,6 +806,25 @@
             alert('Price cannot be negative!');
             return false;
         }
+
+        // Show loading state on submit button
+        const submitBtn = this.querySelector('.btn-submit');
+        submitBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Uploading...';
+        submitBtn.disabled = true;
     });
+
+    // Add spin animation for loading state
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+    `;
+    document.head.appendChild(style);
 </script>
 {% endblock %}

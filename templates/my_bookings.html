@@ -432,8 +432,15 @@
             {% for booking in bookings %}
             <div class="booking-card d-flex flex-wrap">
                 <div class="booking-image">
-                    <img src="{{ url_for('static', filename='uploads/' + booking.accommodation.image_filename) if booking.accommodation.image_filename else 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }}" 
-                         alt="{{ booking.accommodation.title }}">
+                    {% if booking.accommodation.image_filename %}
+                        {% if 'http' in booking.accommodation.image_filename %}
+                            <img src="{{ booking.accommodation.image_filename }}" alt="{{ booking.accommodation.title }}">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='uploads/' + booking.accommodation.image_filename) }}" alt="{{ booking.accommodation.title }}">
+                        {% endif %}
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="{{ booking.accommodation.title }}">
+                    {% endif %}
                 </div>
                 <div class="booking-content">
                     <div class="booking-header">
