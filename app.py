@@ -926,5 +926,33 @@ def create_app():
     """Application factory for production"""
     return app
 
+
+# Temporary: Run database fix on startup
+@app.before_first_request
+def run_db_fix():
+    try:
+        from sqlalchemy import text
+        # Check and fix column length
+        result = db.session.execute(text("""
+            SELECT character_maximum_length 
+            FROM information_schema.columns 
+            WHERE table_name = 'accommodation' 
+            AND column_name = 'image_filename';
+        """))
+        current_length = result.scalar()
+        
+        if current_length and current_length < 500:
+            db.session.execute(text("""
+                ALTER TABLE accommodation 
+                ALTER COLUMN image_filename TYPE VARCHAR(500);
+            """))
+            db.session.commit()
+            logger.info("Fixed image_filename column length to 500")
+    except Exception as e:
+        logger.error(f"DB fix error: {e}")
+        db.session.rollback()
+
+
+
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)
