@@ -38,6 +38,9 @@ stripe.api_key = app.config['STRIPE_SECRET_KEY']
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(os.path.join('static', 'images', 'team'), exist_ok=True)
 
+# Track if DB fix has run (since before_first_request is deprecated)
+_db_fix_ran = False
+
 # CRITICAL: Create database tables before first request
 @app.before_request
 def create_tables():
@@ -54,6 +57,32 @@ def create_tables():
             except Exception as e:
                 logger.error(f"Error creating tables: {e}")
                 logger.error(traceback.format_exc())
+    
+    # Run DB fix for image_filename column (moved here since before_first_request is removed)
+    global _db_fix_ran
+    if not _db_fix_ran:
+        try:
+            from sqlalchemy import text
+            result = db.session.execute(text("""
+                SELECT character_maximum_length 
+                FROM information_schema.columns 
+                WHERE table_name = 'accommodation' 
+                AND column_name = 'image_filename';
+            """))
+            current_length = result.scalar()
+            
+            if current_length and current_length < 500:
+                db.session.execute(text("""
+                    ALTER TABLE accommodation 
+                    ALTER COLUMN image_filename TYPE VARCHAR(500);
+                """))
+                db.session.commit()
+                logger.info("Fixed image_filename column length to 500")
+            _db_fix_ran = True
+        except Exception as e:
+            logger.error(f"DB fix error: {e}")
+            db.session.rollback()
+            _db_fix_ran = True  # Don't retry on error
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -925,34 +954,6 @@ def my_bookings():
 def create_app():
     """Application factory for production"""
     return app
-
-
-# Temporary: Run database fix on startup
-@app.before_first_request
-def run_db_fix():
-    try:
-        from sqlalchemy import text
-        # Check and fix column length
-        result = db.session.execute(text("""
-            SELECT character_maximum_length 
-            FROM information_schema.columns 
-            WHERE table_name = 'accommodation' 
-            AND column_name = 'image_filename';
-        """))
-        current_length = result.scalar()
-        
-        if current_length and current_length < 500:
-            db.session.execute(text("""
-                ALTER TABLE accommodation 
-                ALTER COLUMN image_filename TYPE VARCHAR(500);
-            """))
-            db.session.commit()
-            logger.info("Fixed image_filename column length to 500")
-    except Exception as e:
-        logger.error(f"DB fix error: {e}")
-        db.session.rollback()
-
-
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)
