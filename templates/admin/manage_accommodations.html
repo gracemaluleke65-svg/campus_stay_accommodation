@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Accommodations{% endblock %}
+
+{% block extra_css %}
+<style>
+    .management-header {
+        background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #ff6b35;
+    }
+    
+    .accommodation-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    
+    .accommodation-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .card-image {
+        height: 180px;
+        background: #f0f0f0;
+        position: relative;
+    }
+    
+    .card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .no-image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #999;
+        font-size: 3rem;
+    }
+    
+    .status-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .status-active { background: #d4edda; color: #155724; }
+    .status-inactive { background: #f8d7da; color: #721c24; }
+    
+    .card-body {
+        padding: 1.25rem;
+    }
+    
+    .card-title {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .card-location {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .card-price {
+        color: #ff6b35;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .occupancy-bar {
+        height: 6px;
+        background: #e0e0e0;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+    
+    .occupancy-fill {
+        height: 100%;
+        background: #ff6b35;
+        border-radius: 3px;
+    }
+    
+    .occupancy-text {
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-action {
+        flex: 1;
+        padding: 0.5rem;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .btn-edit {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+    
+    .btn-edit:hover {
+        background: #1976d2;
+        color: white;
+    }
+    
+    .btn-delete {
+        background: #ffebee;
+        color: #c62828;
+        border: none;
+    }
+    
+    .btn-delete:hover {
+        background: #c62828;
+        color: white;
+    }
+    
+    .btn-toggle {
+        background: #fff3e0;
+        color: #ef6c00;
+        border: none;
+    }
+    
+    .btn-toggle:hover {
+        background: #ef6c00;
+        color: white;
+    }
+    
+    .filter-bar {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .nuke-btn {
+        background: #dc3545;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .nuke-btn:hover {
+        background: #c82333;
+        color: white;
+    }
+    
+    .bulk-actions {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="management-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-buildings"></i> Manage Accommodations</h2>
+                <p class="mb-0">View, edit, and manage all accommodation listings</p>
+            </div>
+            <div>
+                <a href="{{ url_for('admin_new_accommodation') }}" class="btn btn-light btn-lg">
+                    <i class="bi bi-plus-lg"></i> Add New
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-number">{{ accommodations|length }}</div>
+            <div>Total Listings</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ accommodations|selectattr('is_active', 'equalto', true)|list|length }}</div>
+            <div>Active</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ accommodations|selectattr('is_active', 'equalto', false)|list|length }}</div>
+            <div>Inactive</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ accommodations|selectattr('available_spots', 'equalto', 0)|list|length }}</div>
+            <div>Fully Booked</div>
+        </div>
+    </div>
+    
+    <!-- Filters & Search -->
+    <div class="filter-bar">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Status Filter</label>
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Listings</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive Only</option>
+                    <option value="full" {% if status_filter == 'full' %}selected{% endif %}>Fully Booked</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Search by title or location..." value="{{ search_query }}">
+                    <button class="btn btn-primary" type="submit">Search</button>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url_for('admin_nuke_data') }}" class="nuke-btn w-100 justify-content-center">
+                    <i class="bi bi-exclamation-triangle"></i> Nuke All
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Bulk Actions -->
+    <form method="POST" action="{{ url_for('admin_bulk_delete_accommodations') }}" id="bulkForm">
+        <div class="bulk-actions d-flex justify-content-between align-items-center">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="selectAll">
+                <label class="form-check-label" for="selectAll">
+                    <strong>Select All</strong>
+                </label>
+            </div>
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Delete selected accommodations? This cannot be undone!')">
+                <i class="bi bi-trash"></i> Delete Selected
+            </button>
+        </div>
+        
+        <!-- Accommodations Grid -->
+        <div class="row g-4">
+            {% for acc in accommodations %}
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <div class="accommodation-card">
+                    <!-- Image -->
+                    <div class="card-image">
+                        {% if acc.image_filename %}
+                            {% if 'http' in acc.image_filename %}
+                                <img src="{{ acc.image_filename }}" alt="{{ acc.title }}">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='uploads/' + acc.image_filename) }}" alt="{{ acc.title }}">
+                            {% endif %}
+                        {% else %}
+                            <div class="no-image">
+                                <i class="bi bi-image"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Status Badge -->
+                        <span class="status-badge {% if acc.is_active %}status-active{% else %}status-inactive{% endif %}">
+                            {% if acc.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                        
+                        <!-- Checkbox -->
+                        <div class="position-absolute top-0 start-0 m-2">
+                            <input type="checkbox" name="accommodation_ids" value="{{ acc.id }}" class="form-check-input select-item" style="width: 20px; height: 20px;">
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="card-body">
+                        <h5 class="card-title">{{ acc.title }}</h5>
+                        <div class="card-location">
+                            <i class="bi bi-geo-alt"></i> {{ acc.location }}
+                        </div>
+                        <div class="card-price">
+                            R {{ "%.0f"|format(acc.price_per_month) }}/month
+                        </div>
+                        
+                        <!-- Occupancy -->
+                        <div class="occupancy-bar">
+                            {% set pct = (acc.current_occupancy / acc.capacity * 100) if acc.capacity > 0 else 0 %}
+                            <div class="occupancy-fill" style="width: {{ pct }}%"></div>
+                        </div>
+                        <div class="occupancy-text">
+                            {{ acc.current_occupancy }}/{{ acc.capacity }} occupied ({{ acc.available_spots() }} available)
+                        </div>
+                        
+                        <!-- Amenities -->
+                        <div class="mt-2">
+                            {% for amenity in acc.get_amenities_list()[:3] %}
+                            <span class="badge bg-light text-dark me-1">
+                                <i class="bi {{ get_amenity_icon(amenity) }}"></i> {{ amenity|title }}
+                            </span>
+                            {% endfor %}
+                            {% if acc.get_amenities_list()|length > 3 %}
+                            <span class="badge bg-light text-dark">+{{ acc.get_amenities_list()|length - 3 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="card-actions">
+                            <a href="{{ url_for('admin_edit_accommodation', id=acc.id) }}" class="btn-action btn-edit">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <form method="POST" action="{{ url_for('admin_toggle_accommodation_status', id=acc.id) }}" style="flex: 1;">
+                                <button type="submit" class="btn-action btn-toggle w-100">
+                                    {% if acc.is_active %}
+                                    <i class="bi bi-eye-slash"></i> Hide
+                                    {% else %}
+                                    <i class="bi bi-eye"></i> Show
+                                    {% endif %}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin_delete_accommodation', id=acc.id) }}" style="flex: 1;" onsubmit="return confirm('Delete this accommodation permanently?')">
+                                <button type="submit" class="btn-action btn-delete w-100">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 4rem; color: #ddd;"></i>
+                <h4 class="mt-3 text-muted">No accommodations found</h4>
+                <a href="{{ url_for('admin_new_accommodation') }}" class="btn btn-primary mt-3">
+                    <i class="bi bi-plus-lg"></i> Add First Accommodation
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Select All checkbox
+    document.getElementById('selectAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.select-item');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+</script>
+{% endblock %}

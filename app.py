@@ -484,7 +484,7 @@ def admin_dashboard():
     try:
         stats = {
             'total_users': User.query.count(),
-            'total_accommodations': Accommodation.query.filter_by(is_active=True).count(),
+            'total_accommodations': Accommodation.query.count(),
             'active_accommodations': Accommodation.query.filter_by(is_active=True).count(),
             'total_bookings': Booking.query.count(),
             'paid_bookings': Booking.query.filter_by(status='paid').count(),
@@ -496,6 +496,172 @@ def admin_dashboard():
         logger.error(f"Admin dashboard error: {e}")
         flash('Error loading dashboard.', 'danger')
         return redirect(url_for('index'))
+
+# ============================================
+# NEW: ADMIN MANAGE ACCOMMODATIONS PAGE
+# ============================================
+@app.route('/admin/accommodations')
+@login_required
+def admin_manage_accommodations():
+    """Admin page to view, edit, and delete all accommodations"""
+    if not current_user.is_admin:
+        flash('Access denied.', 'danger')
+        return redirect(url_for('index'))
+    
+    try:
+        # Get filter parameters
+        status_filter = request.args.get('status', 'all')
+        search_query = request.args.get('q', '')
+        
+        # Base query
+        query = Accommodation.query
+        
+        # Apply filters
+        if status_filter == 'active':
+            query = query.filter_by(is_active=True)
+        elif status_filter == 'inactive':
+            query = query.filter_by(is_active=False)
+        elif status_filter == 'full':
+            query = query.filter(Accommodation.current_occupancy >= Accommodation.capacity)
+        
+        # Apply search
+        if search_query:
+            query = query.filter(
+                db.or_(
+                    Accommodation.title.ilike(f'%{search_query}%'),
+                    Accommodation.location.ilike(f'%{search_query}%')
+                )
+            )
+        
+        # Order by newest first
+        accommodations = query.order_by(Accommodation.created_at.desc()).all()
+        
+        return render_template('admin/manage_accommodations.html',
+                             accommodations=accommodations,
+                             status_filter=status_filter,
+                             search_query=search_query,
+                             get_amenity_icon=get_amenity_icon)
+    except Exception as e:
+        logger.error(f"Admin manage accommodations error: {e}")
+        flash('Error loading accommodations.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/accommodation/<int:id>/toggle-status', methods=['POST'])
+@login_required
+def admin_toggle_accommodation_status(id):
+    """Quick toggle for accommodation active/inactive status"""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        acc = Accommodation.query.get_or_404(id)
+        acc.is_active = not acc.is_active
+        db.session.commit()
+        
+        status = "activated" if acc.is_active else "deactivated"
+        flash(f'Accommodation {status} successfully!', 'success')
+        return redirect(url_for('admin_manage_accommodations'))
+    except Exception as e:
+        logger.error(f"Toggle status error: {e}")
+        db.session.rollback()
+        flash('Error updating status.', 'danger')
+        return redirect(url_for('admin_manage_accommodations'))
+
+@app.route('/admin/accommodation/bulk-delete', methods=['POST'])
+@login_required
+def admin_bulk_delete_accommodations():
+    """Delete multiple accommodations at once"""
+    if not current_user.is_admin:
+        flash('Access denied.', 'danger')
+        return redirect(url_for('index'))
+    
+    try:
+        ids = request.form.getlist('accommodation_ids')
+        if not ids:
+            flash('No accommodations selected.', 'warning')
+            return redirect(url_for('admin_manage_accommodations'))
+        
+        deleted_count = 0
+        for id in ids:
+            acc = Accommodation.query.get(id)
+            if acc:
+                # Delete Cloudinary image if exists
+                if acc.image_filename and 'cloudinary' in acc.image_filename:
+                    delete_image(acc.image_filename)
+                
+                db.session.delete(acc)
+                deleted_count += 1
+        
+        db.session.commit()
+        flash(f'{deleted_count} accommodation(s) deleted successfully!', 'success')
+        logger.info(f"Bulk delete: {deleted_count} accommodations by admin {current_user.id}")
+        
+    except Exception as e:
+        logger.error(f"Bulk delete error: {e}")
+        db.session.rollback()
+        flash('Error deleting accommodations.', 'danger')
+    
+    return redirect(url_for('admin_manage_accommodations'))
+
+# ============================================
+# NEW: NUKE ALL DATA (Use with caution!)
+# ============================================
+@app.route('/admin/nuke', methods=['GET', 'POST'])
+@login_required
+def admin_nuke_data():
+    """Nuclear option: Delete ALL accommodations and related data"""
+    if not current_user.is_admin:
+        flash('Access denied.', 'danger')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        confirmation = request.form.get('confirmation')
+        
+        if confirmation != 'NUKE':
+            flash('Incorrect confirmation code. Nothing was deleted.', 'warning')
+            return redirect(url_for('admin_nuke_data'))
+        
+        try:
+            # Count before delete
+            acc_count = Accommodation.query.count()
+            book_count = Booking.query.count()
+            rev_count = Review.query.count()
+            fav_count = Favorite.query.count()
+            
+            # Delete in order to avoid FK constraints
+            Favorite.query.delete()
+            Review.query.delete()
+            Booking.query.delete()
+            
+            # Delete Cloudinary images first
+            accommodations = Accommodation.query.all()
+            for acc in accommodations:
+                if acc.image_filename and 'cloudinary' in acc.image_filename:
+                    delete_image(acc.image_filename)
+            
+            Accommodation.query.delete()
+            db.session.commit()
+            
+            flash(f'💥 NUKED: {acc_count} accommodations, {book_count} bookings, {rev_count} reviews, {fav_count} favorites deleted!', 'success')
+            logger.warning(f"NUKE executed by admin {current_user.email}: {acc_count} acc, {book_count} book, {rev_count} rev, {fav_count} fav")
+            
+            return redirect(url_for('admin_dashboard'))
+            
+        except Exception as e:
+            logger.error(f"Nuke error: {e}")
+            db.session.rollback()
+            flash(f'Error during nuke: {str(e)}', 'danger')
+            return redirect(url_for('admin_nuke_data'))
+    
+    # GET request - show confirmation page
+    stats = {
+        'accommodations': Accommodation.query.count(),
+        'bookings': Booking.query.count(),
+        'reviews': Review.query.count(),
+        'favorites': Favorite.query.count()
+    }
+    
+    return render_template('admin/nuke_confirm.html', stats=stats)
 
 @app.route('/admin/accommodation/new', methods=['GET', 'POST'])
 @login_required
@@ -542,7 +708,7 @@ def admin_new_accommodation():
             db.session.commit()
             logger.info(f"New accommodation created: {acc.title}")
             flash('Accommodation added successfully!', 'success')
-            return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('admin_manage_accommodations'))
         except Exception as e:
             logger.error(f"Error creating accommodation: {e}")
             db.session.rollback()
@@ -598,7 +764,7 @@ def admin_edit_accommodation(id):
             db.session.commit()
             logger.info(f"Accommodation updated: {acc.title}")
             flash('Accommodation updated successfully!', 'success')
-            return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('admin_manage_accommodations'))
         
         current_amenities = acc.get_amenities_list()
         form.wifi.data = '1' if 'wifi' in current_amenities else '0'
@@ -615,7 +781,7 @@ def admin_edit_accommodation(id):
         logger.error(f"Edit accommodation error: {e}")
         db.session.rollback()
         flash('Error updating accommodation.', 'danger')
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('admin_manage_accommodations'))
 
 @app.route('/admin/accommodation/<int:id>/delete', methods=['POST'])
 @login_required
@@ -636,12 +802,12 @@ def admin_delete_accommodation(id):
         db.session.commit()
         logger.info(f"Accommodation deleted: {id}")
         flash('Accommodation deleted successfully!', 'success')
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('admin_manage_accommodations'))
     except Exception as e:
         logger.error(f"Delete accommodation error: {e}")
         db.session.rollback()
         flash('Error deleting accommodation.', 'danger')
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('admin_manage_accommodations'))
 
 @app.route('/admin/users')
 @login_required
@@ -743,7 +909,3 @@ def create_app():
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)
-    
-    
-    
-    

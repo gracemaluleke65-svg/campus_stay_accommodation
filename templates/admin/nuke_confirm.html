@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}⚠️ Nuke All Data{% endblock %}
+
+{% block extra_css %}
+<style>
+    .nuke-container {
+        max-width: 600px;
+        margin: 3rem auto;
+    }
+    
+    .nuke-warning {
+        background: #fff3cd;
+        border: 3px solid #dc3545;
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+        50% { box-shadow: 0 0 0 20px rgba(220, 53, 69, 0); }
+    }
+    
+    .nuke-icon {
+        font-size: 5rem;
+        color: #dc3545;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-list {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        text-align: left;
+    }
+    
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+    
+    .stat-count {
+        font-weight: bold;
+        color: #dc3545;
+    }
+    
+    .confirmation-box {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .nuke-input {
+        font-size: 1.5rem;
+        text-align: center;
+        letter-spacing: 0.5rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    .btn-nuke {
+        background: #dc3545;
+        color: white;
+        padding: 1rem 3rem;
+        font-size: 1.25rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 12px;
+        width: 100%;
+        margin-top: 1rem;
+    }
+    
+    .btn-nuke:hover:not(:disabled) {
+        background: #c82333;
+    }
+    
+    .btn-nuke:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .btn-cancel {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.75rem 2rem;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container nuke-container">
+    <div class="nuke-warning">
+        <div class="nuke-icon">☢️</div>
+        <h1 class="text-danger">WARNING!</h1>
+        <h3>Nuclear Option Activated</h3>
+        <p class="lead">This will <strong>PERMANENTLY DELETE</strong> all data from the database. This action <strong>CANNOT BE UNDONE</strong>.</p>
+        
+        <div class="stats-list">
+            <h5 class="text-center mb-3">Data to be destroyed:</h5>
+            <div class="stat-item">
+                <span><i class="bi bi-building text-danger"></i> Accommodations</span>
+                <span class="stat-count">{{ stats.accommodations }}</span>
+            </div>
+            <div class="stat-item">
+                <span><i class="bi bi-calendar-check text-danger"></i> Bookings</span>
+                <span class="stat-count">{{ stats.bookings }}</span>
+            </div>
+            <div class="stat-item">
+                <span><i class="bi bi-star text-danger"></i> Reviews</span>
+                <span class="stat-count">{{ stats.reviews }}</span>
+            </div>
+            <div class="stat-item">
+                <span><i class="bi bi-heart text-danger"></i> Favorites</span>
+                <span class="stat-count">{{ stats.favorites }}</span>
+            </div>
+        </div>
+        
+        <div class="confirmation-box">
+            <p class="fw-bold mb-3">To confirm destruction, type <code class="bg-dark text-white px-2 py-1 rounded">NUKE</code> below:</p>
+            <form method="POST" id="nukeForm">
+                <input type="text" 
+                       name="confirmation" 
+                       id="confirmation" 
+                       class="form-control nuke-input" 
+                       placeholder="TYPE NUKE"
+                       autocomplete="off">
+                <button type="submit" class="btn-nuke" id="nukeBtn" disabled>
+                    <i class="bi bi-exclamation-triangle-fill"></i> 
+                    CONFIRM DESTRUCTION
+                </button>
+            </form>
+        </div>
+        
+        <a href="{{ url_for('admin_dashboard') }}" class="btn-cancel">
+            <i class="bi bi-arrow-left"></i> Cancel and Go Back
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const confirmationInput = document.getElementById('confirmation');
+    const nukeBtn = document.getElementById('nukeBtn');
+    
+    confirmationInput.addEventListener('input', function() {
+        if (this.value === 'NUKE') {
+            nukeBtn.disabled = false;
+            nukeBtn.classList.add('animate__animated', 'animate__pulse');
+        } else {
+            nukeBtn.disabled = true;
+        }
+    });
+    
+    document.getElementById('nukeForm').addEventListener('submit', function(e) {
+        if (confirmationInput.value !== 'NUKE') {
+            e.preventDefault();
+            alert('You must type NUKE to confirm!');
+            return false;
+        }
+        return confirm('FINAL WARNING: Are you absolutely sure? This is irreversible!');
+    });
+</script>
+{% endblock %}
