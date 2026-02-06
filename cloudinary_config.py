@@ -13,13 +13,13 @@ def init_cloudinary(app):
     )
 
 def upload_image(file, folder="campus_stay"):
-    """Upload image to Cloudinary and return the URL"""
+    """Upload image to Cloudinary using unsigned preset"""
     try:
-        # file can be FileStorage (from Flask form) or a file path
         result = cloudinary.uploader.upload(
             file,
-            folder=folder,
-            resource_type="auto"
+            resource_type="auto",
+            upload_preset="campus_stay_unsigned",  # Your unsigned preset
+            folder=folder  # This will be combined with your preset settings
         )
         return result['secure_url']
     except Exception as e:
@@ -30,14 +30,10 @@ def delete_image(image_url):
     """Delete image from Cloudinary"""
     try:
         if image_url and 'cloudinary' in image_url:
-            # Extract public_id from URL
-            # URL format: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/filename.jpg
             parts = image_url.split('/')
-            # Find the part after 'upload' which contains version and public_id
             upload_index = parts.index('upload') if 'upload' in parts else -1
             if upload_index != -1 and len(parts) > upload_index + 2:
-                # Skip version number (v1234567890) and join the rest
-                public_id = '/'.join(parts[upload_index + 2:]).split('.')[0]  # Remove file extension
+                public_id = '/'.join(parts[upload_index + 2:]).split('.')[0]
                 cloudinary.uploader.destroy(public_id)
                 return True
     except Exception as e:
