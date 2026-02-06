@@ -508,6 +508,9 @@ def admin_manage_accommodations():
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
     
+    # Initialize form at the start to avoid undefined errors
+    form = SearchForm()
+    
     try:
         # Get filter parameters
         status_filter = request.args.get('status', 'all')
@@ -538,13 +541,21 @@ def admin_manage_accommodations():
         
         return render_template('admin/manage_accommodations.html',
                              accommodations=accommodations,
+                             form=form,  # Now form is always defined
                              status_filter=status_filter,
                              search_query=search_query,
                              get_amenity_icon=get_amenity_icon)
     except Exception as e:
         logger.error(f"Admin manage accommodations error: {e}")
+        logger.error(traceback.format_exc())
         flash('Error loading accommodations.', 'danger')
-        return redirect(url_for('admin_dashboard'))
+        # Return with form even in error case
+        return render_template('admin/manage_accommodations.html',
+                             accommodations=[],
+                             form=form,
+                             status_filter='all',
+                             search_query='',
+                             get_amenity_icon=get_amenity_icon)
 
 @app.route('/admin/accommodation/<int:id>/toggle-status', methods=['POST'])
 @login_required
@@ -698,6 +709,11 @@ def admin_new_accommodation():
             # Get image URL from Cloudinary widget (browser upload)
             image_url = request.form.get('image_url')
             if image_url:
+                # Strip whitespace and validate URL length
+                image_url = image_url.strip()
+                if len(image_url) > 500:
+                    flash('Image URL is too long. Please use a different image.', 'danger')
+                    return render_template('admin/accommodation_form.html', form=form, title='New Accommodation')
                 acc.image_filename = image_url
                 logger.info(f"Image URL saved from Cloudinary: {image_url}")
             
@@ -708,6 +724,7 @@ def admin_new_accommodation():
             return redirect(url_for('admin_manage_accommodations'))
         except Exception as e:
             logger.error(f"Error creating accommodation: {e}")
+            logger.error(traceback.format_exc())
             db.session.rollback()
             flash('Failed to add accommodation.', 'danger')
     
@@ -746,14 +763,21 @@ def admin_edit_accommodation(id):
             
             # Get image URL from Cloudinary widget (browser upload)
             image_url = request.form.get('image_url')
-            if image_url and image_url != acc.image_filename:
-                # Delete old Cloudinary image if exists
-                if acc.image_filename and 'cloudinary' in acc.image_filename:
-                    delete_image(acc.image_filename)
-                
-                # Save new image URL
-                acc.image_filename = image_url
-                logger.info(f"Image updated from Cloudinary: {image_url}")
+            if image_url:
+                image_url = image_url.strip()
+                # Check if URL is different and valid length
+                if image_url != acc.image_filename:
+                    if len(image_url) > 500:
+                        flash('Image URL is too long. Please use a different image.', 'danger')
+                        return render_template('admin/accommodation_form.html', form=form, title='Edit Accommodation', accommodation=acc)
+                    
+                    # Delete old Cloudinary image if exists
+                    if acc.image_filename and 'cloudinary' in acc.image_filename:
+                        delete_image(acc.image_filename)
+                    
+                    # Save new image URL
+                    acc.image_filename = image_url
+                    logger.info(f"Image updated from Cloudinary: {image_url}")
             
             db.session.commit()
             logger.info(f"Accommodation updated: {acc.title}")
@@ -773,6 +797,7 @@ def admin_edit_accommodation(id):
         return render_template('admin/accommodation_form.html', form=form, title='Edit Accommodation', accommodation=acc)
     except Exception as e:
         logger.error(f"Edit accommodation error: {e}")
+        logger.error(traceback.format_exc())
         db.session.rollback()
         flash('Error updating accommodation.', 'danger')
         return redirect(url_for('admin_manage_accommodations'))
