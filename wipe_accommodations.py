@@ -4,7 +4,7 @@ from models import Accommodation, Booking, Review, Favorite
 app = create_app()
 
 with app.app_context():
-    print("⚠️  WARNING: This will delete ALL accommodations and related data!")
+    print("⚠️  WARNING: This will delete ALL Campus Stay data!")
     print(f"Found {Accommodation.query.count()} accommodations")
     print(f"Found {Booking.query.count()} bookings")
     print(f"Found {Review.query.count()} reviews")
@@ -28,7 +28,7 @@ with app.app_context():
             Accommodation.query.delete()
             
             db.session.commit()
-            print("\n✅ All data wiped successfully!")
+            print("\n✅ All Campus Stay data wiped successfully!")
             print("Database is now clean. You can add new accommodations with Cloudinary images.")
             
         except Exception as e:

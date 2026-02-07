@@ -63,17 +63,19 @@ def create_tables():
     if not _db_fix_ran:
         try:
             from sqlalchemy import text
+            # CHANGED: 'accommodation' to 'cs_accommodation'
             result = db.session.execute(text("""
                 SELECT character_maximum_length 
                 FROM information_schema.columns 
-                WHERE table_name = 'accommodation' 
+                WHERE table_name = 'cs_accommodation' 
                 AND column_name = 'image_filename';
             """))
             current_length = result.scalar()
             
             if current_length and current_length < 500:
+                # CHANGED: 'accommodation' to 'cs_accommodation'
                 db.session.execute(text("""
-                    ALTER TABLE accommodation 
+                    ALTER TABLE cs_accommodation 
                     ALTER COLUMN image_filename TYPE VARCHAR(500);
                 """))
                 db.session.commit()

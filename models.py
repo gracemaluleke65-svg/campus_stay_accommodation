@@ -7,7 +7,7 @@ import json
 db = SQLAlchemy()
 
 class User(UserMixin, db.Model):
-    __tablename__ = 'user'
+    __tablename__ = 'cs_user'  # CHANGED from 'user'
     
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(100), nullable=False)
@@ -15,7 +15,7 @@ class User(UserMixin, db.Model):
     student_number = db.Column(db.String(8), unique=True, nullable=False)
     id_number = db.Column(db.String(13), unique=True, nullable=False)
     phone = db.Column(db.String(10), nullable=False)
-    password_hash = db.Column(db.String(255))  # Increased for PostgreSQL
+    password_hash = db.Column(db.String(255))
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
@@ -33,7 +33,7 @@ class User(UserMixin, db.Model):
         return f'<User {self.email}>'
 
 class Accommodation(db.Model):
-    __tablename__ = 'accommodation'
+    __tablename__ = 'cs_accommodation'  # CHANGED from 'accommodation'
     
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -43,10 +43,10 @@ class Accommodation(db.Model):
     price_per_month = db.Column(db.Float, nullable=False)
     capacity = db.Column(db.Integer, nullable=False)
     current_occupancy = db.Column(db.Integer, default=0, nullable=False)
-    image_filename = db.Column(db.String(500))  # INCREASED to 500 for Cloudinary URLs
+    image_filename = db.Column(db.String(500))
     amenities = db.Column(db.String(500))
     is_active = db.Column(db.Boolean, default=True, nullable=False)
-    admin_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    admin_id = db.Column(db.Integer, db.ForeignKey('cs_user.id'))  # CHANGED from 'user.id'
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
     bookings = db.relationship('Booking', backref='accommodation', lazy=True, cascade='all, delete-orphan')
@@ -79,11 +79,11 @@ class Accommodation(db.Model):
         return f'<Accommodation {self.title}>'
 
 class Booking(db.Model):
-    __tablename__ = 'booking'
+    __tablename__ = 'cs_booking'  # CHANGED from 'booking'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    accommodation_id = db.Column(db.Integer, db.ForeignKey('accommodation.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('cs_user.id'), nullable=False)  # CHANGED
+    accommodation_id = db.Column(db.Integer, db.ForeignKey('cs_accommodation.id'), nullable=False)  # CHANGED
     duration = db.Column(db.String(20), nullable=False)
     months = db.Column(db.Integer, nullable=False)
     total_price = db.Column(db.Float, nullable=False)
@@ -95,28 +95,28 @@ class Booking(db.Model):
         return f'<Booking {self.id}>'
 
 class Review(db.Model):
-    __tablename__ = 'review'
+    __tablename__ = 'cs_review'  # CHANGED from 'review'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    accommodation_id = db.Column(db.Integer, db.ForeignKey('accommodation.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('cs_user.id'), nullable=False)  # CHANGED
+    accommodation_id = db.Column(db.Integer, db.ForeignKey('cs_accommodation.id'), nullable=False)  # CHANGED
     rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
-    __table_args__ = (db.UniqueConstraint('user_id', 'accommodation_id', name='unique_review'),)
+    __table_args__ = (db.UniqueConstraint('user_id', 'accommodation_id', name='cs_unique_review'),)  # CHANGED
     
     def __repr__(self):
         return f'<Review {self.id}>'
 
 class Favorite(db.Model):
-    __tablename__ = 'favorite'
+    __tablename__ = 'cs_favorite'  # CHANGED from 'favorite'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    accommodation_id = db.Column(db.Integer, db.ForeignKey('accommodation.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('cs_user.id'), nullable=False)  # CHANGED
+    accommodation_id = db.Column(db.Integer, db.ForeignKey('cs_accommodation.id'), nullable=False)  # CHANGED
     
-    __table_args__ = (db.UniqueConstraint('user_id', 'accommodation_id', name='unique_favorite'),)
+    __table_args__ = (db.UniqueConstraint('user_id', 'accommodation_id', name='cs_unique_favorite'),)  # CHANGED
     
     def __repr__(self):
         return f'<Favorite {self.id}>'

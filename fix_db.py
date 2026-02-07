@@ -1,5 +1,5 @@
 """
-Database migration script to fix image_filename column length
+Database migration script to fix image_filename column
 Run this locally or include in deployment to update PostgreSQL schema
 """
 
@@ -30,29 +30,29 @@ def fix_image_filename_column():
             print(f"   Connected to: {db_info[0]}")
             print(f"   PostgreSQL version: {db_info[1].split()[0]}")
             
-            # Check if accommodation table exists
-            print("\n2. Checking if 'accommodation' table exists...")
+            # Check if accommodation table exists - CHANGED TABLE NAME
+            print("\n2. Checking if 'cs_accommodation' table exists...")
             result = db.session.execute(text("""
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables 
-                    WHERE table_name = 'accommodation'
+                    WHERE table_name = 'cs_accommodation'
                 );
             """))
             table_exists = result.scalar()
             
             if not table_exists:
-                print("   Table 'accommodation' does not exist yet. Skipping migration.")
+                print("   Table 'cs_accommodation' does not exist yet. Skipping migration.")
                 print("   (It will be created with correct column size on next app start)")
                 return True
             
-            print("   Table 'accommodation' found.")
+            print("   Table 'cs_accommodation' found.")
             
-            # Check current column definition
+            # Check current column definition - CHANGED TABLE NAME
             print("\n3. Checking current 'image_filename' column definition...")
             result = db.session.execute(text("""
                 SELECT column_name, data_type, character_maximum_length 
                 FROM information_schema.columns 
-                WHERE table_name = 'accommodation' 
+                WHERE table_name = 'cs_accommodation' 
                 AND column_name = 'image_filename';
             """))
             column_info = result.fetchone()
@@ -66,11 +66,11 @@ def fix_image_filename_column():
             print(f"   Data type: {column_info[1]}")
             print(f"   Current max length: {current_length}")
             
-            # Alter column if needed
+            # Alter column if needed - CHANGED TABLE NAME
             if current_length and current_length < 500:
                 print(f"\n4. Updating column length from {current_length} to 500...")
                 db.session.execute(text("""
-                    ALTER TABLE accommodation 
+                    ALTER TABLE cs_accommodation 
                     ALTER COLUMN image_filename TYPE VARCHAR(500);
                 """))
                 db.session.commit()
@@ -78,12 +78,12 @@ def fix_image_filename_column():
             else:
                 print(f"\n4. Column length is already sufficient ({current_length}). No changes needed.")
             
-            # Verify the change
+            # Verify the change - CHANGED TABLE NAME
             print("\n5. Verifying changes...")
             result = db.session.execute(text("""
                 SELECT character_maximum_length 
                 FROM information_schema.columns 
-                WHERE table_name = 'accommodation' 
+                WHERE table_name = 'cs_accommodation' 
                 AND column_name = 'image_filename';
             """))
             new_length = result.scalar()
