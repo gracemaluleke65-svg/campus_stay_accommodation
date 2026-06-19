@@ -34,189 +34,190 @@ login_manager.login_message_category = 'info'
 
 stripe.api_key = app.config['STRIPE_SECRET_KEY']
 
-# Ensure upload directories exist (for local fallback if needed)
+# Ensure upload directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(os.path.join('static', 'images', 'team'), exist_ok=True)
 
-# Track if DB fix has run (since before_first_request is deprecated)
 _db_fix_ran = False
 
 # =====================================================================
-# SEEDING FUNCTION - Adds accommodations and reviews if DB is empty
+# SEEDING FUNCTION - Adds accommodations and reviews if needed
 # =====================================================================
 def seed_accommodations():
-    """Seed accommodations and reviews if the accommodation table is empty."""
+    """Seed accommodations and reviews if the accommodation table is empty.
+       Also, if accommodations exist but reviews are missing, add reviews.
+    """
     with app.app_context():
-        if Accommodation.query.count() > 0:
-            logger.info("Accommodations already exist. Skipping seed.")
-            return
+        # ----- Step 1: Add accommodations if none exist -----
+        if Accommodation.query.count() == 0:
+            logger.info("Seeding accommodations...")
+            accommodations_data = [
+                {
+                    "title": "Maboneng Study Loft",
+                    "description": "Modern student loft in the heart of Johannesburg CBD, walking distance to University of Johannesburg satellite campuses. Close to cafes, Gautrain buses, art spaces, and 24/7 security patrols.",
+                    "location": "Johannesburg CBD, Gauteng",
+                    "room_type": "studio",
+                    "price_per_month": 4800,
+                    "capacity": 136,
+                    "current_occupancy": 32,
+                    "image_filename": "img/accommodations/Maboneng Study Loft.jpg",
+                    "amenities": ["wifi", "parking", "laundry", "furnished", "security", "study_area"]
+                },
+                {
+                    "title": "Hatfield Campus Residence",
+                    "description": "Popular student residence near University of Pretoria. Includes shuttle access, quiet study lounges, and vibrant student community.",
+                    "location": "Hatfield, Pretoria",
+                    "room_type": "single",
+                    "price_per_month": 5700,
+                    "capacity": 360,
+                    "current_occupancy": 324,
+                    "image_filename": "img/accommodations/Hatfield Campus Residence.webp",
+                    "amenities": ["wifi", "laundry", "gym", "furnished", "security", "study_area"]
+                },
+                {
+                    "title": "Braamfontein Scholar House",
+                    "description": "Located in Braamfontein, ideal for Wits University students. Surrounded by libraries, bookstores, and student nightlife.",
+                    "location": "Braamfontein, Johannesburg",
+                    "room_type": "shared",
+                    "price_per_month": 4900,
+                    "capacity": 120,
+                    "current_occupancy": 75,
+                    "image_filename": "img/accommodations/Braamfontein Scholar House.webp",
+                    "amenities": ["wifi", "laundry", "security", "study_area"]
+                },
+                {
+                    "title": "Observatory Student Living",
+                    "description": "Trendy Cape Town student housing near UCT. Easy access to train station and campus shuttle routes.",
+                    "location": "Observatory, Cape Town",
+                    "room_type": "single",
+                    "price_per_month": 6900,
+                    "capacity": 80,
+                    "current_occupancy": 50,
+                    "image_filename": "img/accommodations/Observatory Student Living.webp",
+                    "amenities": ["wifi", "parking", "laundry", "furnished", "security", "study_area"]
+                },
+                {
+                    "title": "Rosebank Campus Hub",
+                    "description": "Premium student accommodation near Rosebank Mall and transport interchange.",
+                    "location": "Rosebank, Johannesburg",
+                    "room_type": "studio",
+                    "price_per_month": 7800,
+                    "capacity": 75,
+                    "current_occupancy": 38,
+                    "image_filename": "img/accommodations/Rosebank Campus Hub.jpg",
+                    "amenities": ["wifi", "parking", "gym", "furnished", "security", "study_area"]
+                }
+            ]
 
-        logger.info("Seeding accommodations and reviews...")
-
-        # ---------- Accommodation Data ----------
-        accommodations_data = [
-            {
-                "title": "Maboneng Study Loft",
-                "description": "Modern student loft in the heart of Johannesburg CBD, walking distance to University of Johannesburg satellite campuses. Close to cafes, Gautrain buses, art spaces, and 24/7 security patrols.",
-                "location": "Johannesburg CBD, Gauteng",
-                "room_type": "studio",
-                "price_per_month": 4800,
-                "capacity": 136,
-                "current_occupancy": 32,
-                "image_filename": "img/accommodations/Maboneng Study Loft.jpg",
-                "amenities": ["wifi", "parking", "laundry", "furnished", "security", "study_area"]
-            },
-            {
-                "title": "Hatfield Campus Residence",
-                "description": "Popular student residence near University of Pretoria. Includes shuttle access, quiet study lounges, and vibrant student community.",
-                "location": "Hatfield, Pretoria",
-                "room_type": "single",
-                "price_per_month": 5700,
-                "capacity": 360,
-                "current_occupancy": 324,
-                "image_filename": "img/accommodations/Hatfield Campus Residence.webp",
-                "amenities": ["wifi", "laundry", "gym", "furnished", "security", "study_area"]
-            },
-            {
-                "title": "Braamfontein Scholar House",
-                "description": "Located in Braamfontein, ideal for Wits University students. Surrounded by libraries, bookstores, and student nightlife.",
-                "location": "Braamfontein, Johannesburg",
-                "room_type": "shared",
-                "price_per_month": 4900,
-                "capacity": 120,
-                "current_occupancy": 75,
-                "image_filename": "img/accommodations/Braamfontein Scholar House.webp",
-                "amenities": ["wifi", "laundry", "security", "study_area"]
-            },
-            {
-                "title": "Observatory Student Living",
-                "description": "Trendy Cape Town student housing near UCT. Easy access to train station and campus shuttle routes.",
-                "location": "Observatory, Cape Town",
-                "room_type": "single",
-                "price_per_month": 6900,
-                "capacity": 80,
-                "current_occupancy": 50,
-                "image_filename": "img/accommodations/Observatory Student Living.webp",
-                "amenities": ["wifi", "parking", "laundry", "furnished", "security", "study_area"]
-            },
-            {
-                "title": "Rosebank Campus Hub",
-                "description": "Premium student accommodation near Rosebank Mall and transport interchange.",
-                "location": "Rosebank, Johannesburg",
-                "room_type": "studio",
-                "price_per_month": 7800,
-                "capacity": 75,
-                "current_occupancy": 38,
-                "image_filename": "img/accommodations/Rosebank Campus Hub.jpg",
-                "amenities": ["wifi", "parking", "gym", "furnished", "security", "study_area"]
-            }
-        ]
-
-        # ---------- Fake User Data for Reviews ----------
-        fake_users = [
-            {"full_name": "Sipho Mthembu", "email": "sipho.mthembu@example.com", "student_number": "87654321", "id_number": "9001011234567", "phone": "0823456789"},
-            {"full_name": "Thandi Nkosi", "email": "thandi.nkosi@example.com", "student_number": "12348765", "id_number": "9502022345678", "phone": "0834567890"},
-            {"full_name": "Michael Jacobs", "email": "michael.jacobs@example.com", "student_number": "56781234", "id_number": "8803033456789", "phone": "0845678901"},
-            {"full_name": "Zanele Cele", "email": "zanele.cele@example.com", "student_number": "98765432", "id_number": "9204044567890", "phone": "0856789012"},
-            {"full_name": "David Smith", "email": "david.smith@example.com", "student_number": "45678901", "id_number": "9105055678901", "phone": "0867890123"},
-            {"full_name": "Naledi Mokoena", "email": "naledi.mokoena@example.com", "student_number": "34567890", "id_number": "9606066789012", "phone": "0878901234"},
-        ]
-
-        # ---------- Create Accommodations ----------
-        created_accommodations = []
-        for data in accommodations_data:
-            acc = Accommodation(
-                title=data["title"],
-                description=data["description"],
-                location=data["location"],
-                room_type=data["room_type"],
-                price_per_month=data["price_per_month"],
-                capacity=data["capacity"],
-                current_occupancy=data["current_occupancy"],
-                image_filename=data["image_filename"],
-                is_active=True,
-                admin_id=1  # Assume admin user exists (seeded earlier)
-            )
-            acc.set_amenities_list(data["amenities"])
-            db.session.add(acc)
-            created_accommodations.append(acc)
-
-        db.session.commit()
-        logger.info(f"Added {len(created_accommodations)} accommodations.")
-
-        # ---------- Create Fake Users for Reviews ----------
-        created_users = []
-        for f_user in fake_users:
-            # Check if user already exists (by email or student number)
-            existing = User.query.filter(
-                (User.email == f_user["email"]) |
-                (User.student_number == f_user["student_number"])
-            ).first()
-            if existing:
-                # Use existing user if found
-                created_users.append(existing)
-                continue
-
-            user = User(
-                full_name=f_user["full_name"],
-                email=f_user["email"],
-                student_number=f_user["student_number"],
-                id_number=f_user["id_number"],
-                phone=f_user["phone"],
-                is_admin=False
-            )
-            # Set a default password (you could set to something like 'password123')
-            user.set_password("password123")
-            db.session.add(user)
-            created_users.append(user)
-
-        db.session.commit()
-        logger.info(f"Created {len(created_users)} users for reviews.")
-
-        # ---------- Create Reviews ----------
-        review_comments = [
-            "Great place, very clean and close to campus. Security is good.",
-            "The location is perfect, but the room is a bit small. Overall fine.",
-            "I loved staying here! The amenities are top-notch.",
-            "Good value for money. Would recommend to friends.",
-            "The Wi-Fi is reliable and the study areas are quiet.",
-            "Management is responsive and helpful.",
-            "Parking is a bit tight, but the place is clean.",
-            "Amazing student community! I made great friends.",
-            "The shuttle service is convenient.",
-            "Could use more storage space, but otherwise decent."
-        ]
-
-        # For each accommodation, add 2-4 reviews
-        for acc in created_accommodations:
-            num_reviews = random.randint(2, 4)
-            selected_users = random.sample(created_users, min(num_reviews, len(created_users)))
-            for user in selected_users:
-                # Avoid duplicate review from same user for same accommodation
-                existing_review = Review.query.filter_by(user_id=user.id, accommodation_id=acc.id).first()
-                if existing_review:
-                    continue
-                rating = random.randint(3, 5)  # mostly positive
-                comment = random.choice(review_comments)
-                review = Review(
-                    user_id=user.id,
-                    accommodation_id=acc.id,
-                    rating=rating,
-                    comment=comment
+            created_accommodations = []
+            for data in accommodations_data:
+                acc = Accommodation(
+                    title=data["title"],
+                    description=data["description"],
+                    location=data["location"],
+                    room_type=data["room_type"],
+                    price_per_month=data["price_per_month"],
+                    capacity=data["capacity"],
+                    current_occupancy=data["current_occupancy"],
+                    image_filename=data["image_filename"],
+                    is_active=True,
+                    admin_id=1  # Assume admin exists
                 )
-                db.session.add(review)
+                acc.set_amenities_list(data["amenities"])
+                db.session.add(acc)
+                created_accommodations.append(acc)
 
-        db.session.commit()
-        logger.info("Seeding completed successfully!")
+            db.session.commit()
+            logger.info(f"Added {len(created_accommodations)} accommodations.")
+        else:
+            logger.info("Accommodations already exist. Skipping accommodation seeding.")
 
+        # ----- Step 2: Always create reviews if they are missing -----
+        if Review.query.count() == 0 and Accommodation.query.count() > 0:
+            logger.info("No reviews found. Creating reviews for existing accommodations...")
+            create_reviews_for_existing_accommodations()
+        else:
+            logger.info("Reviews already exist or no accommodations.")
+
+def create_reviews_for_existing_accommodations():
+    """Create fake users and reviews for existing accommodations."""
+    accommodations = Accommodation.query.all()
+    if not accommodations:
+        return
+
+    # Fake user data (with unique credentials)
+    fake_users = [
+        {"full_name": "Sipho Mthembu", "email": "sipho.mthembu@example.com", "student_number": "87654321", "id_number": "9001011234567", "phone": "0823456789"},
+        {"full_name": "Thandi Nkosi", "email": "thandi.nkosi@example.com", "student_number": "12348765", "id_number": "9502022345678", "phone": "0834567890"},
+        {"full_name": "Michael Jacobs", "email": "michael.jacobs@example.com", "student_number": "56781234", "id_number": "8803033456789", "phone": "0845678901"},
+        {"full_name": "Zanele Cele", "email": "zanele.cele@example.com", "student_number": "98765432", "id_number": "9204044567890", "phone": "0856789012"},
+        {"full_name": "David Smith", "email": "david.smith@example.com", "student_number": "45678901", "id_number": "9105055678901", "phone": "0867890123"},
+        {"full_name": "Naledi Mokoena", "email": "naledi.mokoena@example.com", "student_number": "34567890", "id_number": "9606066789012", "phone": "0878901234"},
+    ]
+
+    created_users = []
+    for f_user in fake_users:
+        existing = User.query.filter(
+            (User.email == f_user["email"]) |
+            (User.student_number == f_user["student_number"])
+        ).first()
+        if existing:
+            created_users.append(existing)
+            continue
+
+        user = User(
+            full_name=f_user["full_name"],
+            email=f_user["email"],
+            student_number=f_user["student_number"],
+            id_number=f_user["id_number"],
+            phone=f_user["phone"],
+            is_admin=False
+        )
+        user.set_password("password123")
+        db.session.add(user)
+        created_users.append(user)
+
+    db.session.commit()
+    logger.info(f"Created {len(created_users)} users for reviews.")
+
+    review_comments = [
+        "Great place, very clean and close to campus. Security is good.",
+        "The location is perfect, but the room is a bit small. Overall fine.",
+        "I loved staying here! The amenities are top-notch.",
+        "Good value for money. Would recommend to friends.",
+        "The Wi-Fi is reliable and the study areas are quiet.",
+        "Management is responsive and helpful.",
+        "Parking is a bit tight, but the place is clean.",
+        "Amazing student community! I made great friends.",
+        "The shuttle service is convenient.",
+        "Could use more storage space, but otherwise decent."
+    ]
+
+    for acc in accommodations:
+        num_reviews = random.randint(2, 4)
+        selected_users = random.sample(created_users, min(num_reviews, len(created_users)))
+        for user in selected_users:
+            existing_review = Review.query.filter_by(user_id=user.id, accommodation_id=acc.id).first()
+            if existing_review:
+                continue
+            rating = random.randint(3, 5)
+            comment = random.choice(review_comments)
+            review = Review(
+                user_id=user.id,
+                accommodation_id=acc.id,
+                rating=rating,
+                comment=comment
+            )
+            db.session.add(review)
+
+    db.session.commit()
+    logger.info(f"Added reviews for {len(accommodations)} accommodations.")
 # =====================================================================
 # END SEEDING
 # =====================================================================
 
-# CRITICAL: Create database tables before first request
 @app.before_request
 def create_tables():
-    # This runs before the first request
     if not hasattr(app, 'tables_created'):
         with app.app_context():
             try:
@@ -225,20 +226,23 @@ def create_tables():
                 logger.info("Database tables created successfully!")
                 seed_admin()
                 logger.info("Admin seeding completed!")
-                # Run accommodation seeding only if admin exists and accommodation table is empty
                 seed_accommodations()
                 logger.info("Accommodation seeding completed!")
                 app.tables_created = True
             except Exception as e:
                 logger.error(f"Error during startup: {e}")
                 logger.error(traceback.format_exc())
-    
-    # Run DB fix for image_filename column (moved here since before_first_request is removed)
+
+    # DB fix for image_filename column length (only for PostgreSQL)
     global _db_fix_ran
     if not _db_fix_ran:
         try:
+            if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):
+                logger.info("SQLite detected; skipping column length fix.")
+                _db_fix_ran = True
+                return
+
             from sqlalchemy import text
-            # CHANGED: 'accommodation' to 'cs_accommodation'
             result = db.session.execute(text("""
                 SELECT character_maximum_length 
                 FROM information_schema.columns 
@@ -246,9 +250,8 @@ def create_tables():
                 AND column_name = 'image_filename';
             """))
             current_length = result.scalar()
-            
+
             if current_length and current_length < 500:
-                # CHANGED: 'accommodation' to 'cs_accommodation'
                 db.session.execute(text("""
                     ALTER TABLE cs_accommodation 
                     ALTER COLUMN image_filename TYPE VARCHAR(500);
@@ -259,7 +262,7 @@ def create_tables():
         except Exception as e:
             logger.error(f"DB fix error: {e}")
             db.session.rollback()
-            _db_fix_ran = True  # Don't retry on error
+            _db_fix_ran = True
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -311,7 +314,6 @@ def seed_admin():
             db.session.commit()
             logger.info('Admin user created successfully')
         else:
-            # Update admin password if changed in env vars
             if not admin.check_password(app.config['ADMIN_PASSWORD']):
                 admin.set_password(app.config['ADMIN_PASSWORD'])
                 db.session.commit()
@@ -343,7 +345,6 @@ def index():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    
     form = RegistrationForm()
     if form.validate_on_submit():
         try:
@@ -364,14 +365,12 @@ def register():
             db.session.rollback()
             logger.error(f"Registration error: {e}")
             flash('Registration failed. Please try again.', 'danger')
-    
     return render_template('register.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    
     form = LoginForm()
     if form.validate_on_submit():
         try:
@@ -387,7 +386,6 @@ def login():
         except Exception as e:
             logger.error(f"Login error: {e}")
             flash('Login failed. Please try again.', 'danger')
-    
     return render_template('login.html', form=form)
 
 @app.route('/logout')
@@ -405,7 +403,6 @@ def accommodations():
     form = SearchForm()
     try:
         query = Accommodation.query.filter_by(is_active=True)
-        
         if request.method == 'POST' and form.validate_on_submit():
             if form.location.data:
                 query = query.filter(Accommodation.location.ilike(f'%{form.location.data}%'))
@@ -413,19 +410,16 @@ def accommodations():
                 query = query.filter(Accommodation.price_per_month >= form.min_price.data)
             if form.max_price.data:
                 query = query.filter(Accommodation.price_per_month <= form.max_price.data)
-        
         accommodations = query.all()
-        
         user_favorites = []
         if current_user.is_authenticated:
             user_favorites = [f.accommodation_id for f in current_user.favorites]
-        
-        return render_template('accommodations.html', accommodations=accommodations, form=form, 
+        return render_template('accommodations.html', accommodations=accommodations, form=form,
                              get_amenity_icon=get_amenity_icon, user_favorites=user_favorites)
     except Exception as e:
         logger.error(f"Accommodations error: {e}")
         flash('Error loading accommodations.', 'danger')
-        return render_template('accommodations.html', accommodations=[], form=form, 
+        return render_template('accommodations.html', accommodations=[], form=form,
                              get_amenity_icon=get_amenity_icon, user_favorites=[])
 
 @app.route('/accommodation/<int:id>')
@@ -435,36 +429,29 @@ def accommodation_detail(id):
         if not acc.is_active:
             flash('This accommodation is no longer available.', 'warning')
             return redirect(url_for('accommodations'))
-        
         booking_form = BookingForm()
         review_form = ReviewForm()
-        
         has_booked = False
         can_review = False
         existing_review = None
         is_favorite = False
-        
         if current_user.is_authenticated:
             has_booked = Booking.query.filter_by(
-                user_id=current_user.id, 
-                accommodation_id=id, 
+                user_id=current_user.id,
+                accommodation_id=id,
                 status='paid'
             ).first() is not None
-            
             existing_review = Review.query.filter_by(
                 user_id=current_user.id,
                 accommodation_id=id
             ).first()
-            
             is_favorite = Favorite.query.filter_by(
                 user_id=current_user.id,
                 accommodation_id=id
             ).first() is not None
-            
             can_review = has_booked and not existing_review
-        
-        return render_template('accommodation_detail.html', 
-                             accommodation=acc, 
+        return render_template('accommodation_detail.html',
+                             accommodation=acc,
                              booking_form=booking_form,
                              review_form=review_form,
                              can_review=can_review,
@@ -484,7 +471,6 @@ def toggle_favorite(accommodation_id):
             user_id=current_user.id,
             accommodation_id=accommodation_id
         ).first()
-        
         if favorite:
             db.session.delete(favorite)
             db.session.commit()
@@ -509,15 +495,13 @@ def favorites():
         user_favorites = Favorite.query.filter_by(user_id=current_user.id).all()
         accommodation_ids = [f.accommodation_id for f in user_favorites]
         accommodations = Accommodation.query.filter(Accommodation.id.in_(accommodation_ids), Accommodation.is_active==True).all()
-        
         fav_ids = [f.accommodation_id for f in current_user.favorites]
-        
-        return render_template('favorites.html', accommodations=accommodations, 
+        return render_template('favorites.html', accommodations=accommodations,
                              get_amenity_icon=get_amenity_icon, user_favorites=fav_ids)
     except Exception as e:
         logger.error(f"Favorites error: {e}")
         flash('Error loading favorites.', 'danger')
-        return render_template('favorites.html', accommodations=[], 
+        return render_template('favorites.html', accommodations=[],
                              get_amenity_icon=get_amenity_icon, user_favorites=[])
 
 @app.route('/book/<int:accommodation_id>', methods=['POST'])
@@ -525,23 +509,15 @@ def favorites():
 def book(accommodation_id):
     try:
         accommodation = Accommodation.query.get_or_404(accommodation_id)
-        
         if accommodation.is_full():
             flash('Sorry, this accommodation is fully booked.', 'danger')
             return redirect(url_for('accommodation_detail', id=accommodation_id))
-        
         duration = request.form.get('duration')
-        if duration == 'annual':
-            months = 10
-        else:
-            months = 5
-        
+        months = 10 if duration == 'annual' else 5
         total_price = accommodation.price_per_month * months
-        
         if total_price < 0.5:
             flash('Total price must be at least R 0.50', 'danger')
             return redirect(url_for('accommodation_detail', id=accommodation_id))
-        
         booking = Booking(
             user_id=current_user.id,
             accommodation_id=accommodation_id,
@@ -552,10 +528,7 @@ def book(accommodation_id):
         )
         db.session.add(booking)
         db.session.commit()
-        
         try:
-            logger.info(f"Creating Stripe checkout session for booking {booking.id}")
-            
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -573,20 +546,15 @@ def book(accommodation_id):
                 success_url=url_for('payment_success', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
                 cancel_url=url_for('payment_cancel', booking_id=booking.id, _external=True),
             )
-            
             booking.stripe_session_id = checkout_session.id
             db.session.commit()
-            
-            logger.info(f"Stripe session created: {checkout_session.id}")
             return redirect(checkout_session.url)
-        
         except Exception as e:
             logger.error(f"Stripe Error: {str(e)}")
             db.session.delete(booking)
             db.session.commit()
             flash('Payment setup failed. Please try again.', 'danger')
             return redirect(url_for('accommodation_detail', id=accommodation_id))
-            
     except Exception as e:
         logger.error(f"Booking error: {e}")
         db.session.rollback()
@@ -599,28 +567,22 @@ def payment_success():
     if not session_id:
         flash('Invalid payment session.', 'danger')
         return redirect(url_for('index'))
-    
     try:
         session = stripe.checkout.Session.retrieve(session_id)
         if session.payment_status == 'paid':
             booking = Booking.query.filter_by(stripe_session_id=session_id).first()
             if booking:
                 booking.status = 'paid'
-                
                 accommodation = Accommodation.query.get(booking.accommodation_id)
                 accommodation.current_occupancy += 1
                 if accommodation.current_occupancy >= accommodation.capacity:
                     accommodation.is_active = False
-                
                 db.session.commit()
-                logger.info(f"Payment successful for booking {booking.id}")
-                
                 flash('Payment successful! Please leave a review.', 'success')
                 return render_template('payment_success.html', accommodation_id=booking.accommodation_id)
     except Exception as e:
         logger.error(f"Payment verification error: {str(e)}")
         flash('Payment verification failed.', 'danger')
-    
     return redirect(url_for('index'))
 
 @app.route('/payment/cancel/<int:booking_id>')
@@ -646,20 +608,16 @@ def submit_review(accommodation_id):
             accommodation_id=accommodation_id,
             status='paid'
         ).first()
-        
         if not booking:
             flash('You can only review accommodations you have booked and paid for.', 'danger')
             return redirect(url_for('accommodation_detail', id=accommodation_id))
-        
         existing = Review.query.filter_by(
             user_id=current_user.id,
             accommodation_id=accommodation_id
         ).first()
-        
         if existing:
             flash('You have already reviewed this accommodation.', 'warning')
             return redirect(url_for('accommodation_detail', id=accommodation_id))
-        
         form = ReviewForm()
         if form.validate_on_submit():
             review = Review(
@@ -670,9 +628,7 @@ def submit_review(accommodation_id):
             )
             db.session.add(review)
             db.session.commit()
-            logger.info(f"Review submitted by user {current_user.id} for accommodation {accommodation_id}")
             flash('Review submitted successfully!', 'success')
-        
         return redirect(url_for('accommodation_detail', id=accommodation_id))
     except Exception as e:
         logger.error(f"Review error: {e}")
@@ -686,7 +642,6 @@ def admin_dashboard():
     if not current_user.is_admin:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
     try:
         stats = {
             'total_users': User.query.count(),
@@ -696,39 +651,29 @@ def admin_dashboard():
             'paid_bookings': Booking.query.filter_by(status='paid').count(),
             'total_revenue': db.session.query(db.func.sum(Booking.total_price)).filter_by(status='paid').scalar() or 0
         }
-        
         return render_template('admin/dashboard.html', stats=stats)
     except Exception as e:
         logger.error(f"Admin dashboard error: {e}")
         flash('Error loading dashboard.', 'danger')
         return redirect(url_for('index'))
 
-# ============================================
-# ADMIN MANAGE ACCOMMODATIONS PAGE
-# ============================================
 @app.route('/admin/accommodations')
 @login_required
 def admin_manage_accommodations():
-    """Admin page to view, edit, and delete all accommodations"""
     if not current_user.is_admin:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
     form = SearchForm()
-    
     try:
         status_filter = request.args.get('status', 'all')
         search_query = request.args.get('q', '')
-        
         query = Accommodation.query
-        
         if status_filter == 'active':
             query = query.filter_by(is_active=True)
         elif status_filter == 'inactive':
             query = query.filter_by(is_active=False)
         elif status_filter == 'full':
             query = query.filter(Accommodation.current_occupancy >= Accommodation.capacity)
-        
         if search_query:
             query = query.filter(
                 db.or_(
@@ -736,9 +681,7 @@ def admin_manage_accommodations():
                     Accommodation.location.ilike(f'%{search_query}%')
                 )
             )
-        
         accommodations = query.order_by(Accommodation.created_at.desc()).all()
-        
         return render_template('admin/manage_accommodations.html',
                              accommodations=accommodations,
                              form=form,
@@ -747,7 +690,6 @@ def admin_manage_accommodations():
                              get_amenity_icon=get_amenity_icon)
     except Exception as e:
         logger.error(f"Admin manage accommodations error: {e}")
-        logger.error(traceback.format_exc())
         flash('Error loading accommodations.', 'danger')
         return render_template('admin/manage_accommodations.html',
                              accommodations=[],
@@ -761,14 +703,11 @@ def admin_manage_accommodations():
 def admin_toggle_accommodation_status(id):
     if not current_user.is_admin:
         return jsonify({'error': 'Access denied'}), 403
-    
     try:
         acc = Accommodation.query.get_or_404(id)
         acc.is_active = not acc.is_active
         db.session.commit()
-        
-        status = "activated" if acc.is_active else "deactivated"
-        flash(f'Accommodation {status} successfully!', 'success')
+        flash(f'Accommodation {"activated" if acc.is_active else "deactivated"} successfully!', 'success')
         return redirect(url_for('admin_manage_accommodations'))
     except Exception as e:
         logger.error(f"Toggle status error: {e}")
@@ -782,13 +721,11 @@ def admin_bulk_delete_accommodations():
     if not current_user.is_admin:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
     try:
         ids = request.form.getlist('accommodation_ids')
         if not ids:
             flash('No accommodations selected.', 'warning')
             return redirect(url_for('admin_manage_accommodations'))
-        
         deleted_count = 0
         for id in ids:
             acc = Accommodation.query.get(id)
@@ -797,71 +734,52 @@ def admin_bulk_delete_accommodations():
                     delete_image(acc.image_filename)
                 db.session.delete(acc)
                 deleted_count += 1
-        
         db.session.commit()
         flash(f'{deleted_count} accommodation(s) deleted successfully!', 'success')
-        logger.info(f"Bulk delete: {deleted_count} accommodations by admin {current_user.id}")
-        
     except Exception as e:
         logger.error(f"Bulk delete error: {e}")
         db.session.rollback()
         flash('Error deleting accommodations.', 'danger')
-    
     return redirect(url_for('admin_manage_accommodations'))
 
-# ============================================
-# NUKE ALL DATA
-# ============================================
 @app.route('/admin/nuke', methods=['GET', 'POST'])
 @login_required
 def admin_nuke_data():
     if not current_user.is_admin:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
     if request.method == 'POST':
         confirmation = request.form.get('confirmation')
-        
         if confirmation != 'NUKE':
             flash('Incorrect confirmation code. Nothing was deleted.', 'warning')
             return redirect(url_for('admin_nuke_data'))
-        
         try:
             acc_count = Accommodation.query.count()
             book_count = Booking.query.count()
             rev_count = Review.query.count()
             fav_count = Favorite.query.count()
-            
             Favorite.query.delete()
             Review.query.delete()
             Booking.query.delete()
-            
             accommodations = Accommodation.query.all()
             for acc in accommodations:
                 if acc.image_filename and 'cloudinary' in acc.image_filename:
                     delete_image(acc.image_filename)
-            
             Accommodation.query.delete()
             db.session.commit()
-            
             flash(f'💥 NUKED: {acc_count} accommodations, {book_count} bookings, {rev_count} reviews, {fav_count} favorites deleted!', 'success')
-            logger.warning(f"NUKE executed by admin {current_user.email}: {acc_count} acc, {book_count} book, {rev_count} rev, {fav_count} fav")
-            
             return redirect(url_for('admin_dashboard'))
-            
         except Exception as e:
             logger.error(f"Nuke error: {e}")
             db.session.rollback()
             flash(f'Error during nuke: {str(e)}', 'danger')
             return redirect(url_for('admin_nuke_data'))
-    
     stats = {
         'accommodations': Accommodation.query.count(),
         'bookings': Booking.query.count(),
         'reviews': Review.query.count(),
         'favorites': Favorite.query.count()
     }
-    
     return render_template('admin/nuke_confirm.html', stats=stats)
 
 @app.route('/admin/accommodation/new', methods=['GET', 'POST'])
@@ -870,7 +788,6 @@ def admin_new_accommodation():
     if not current_user.is_admin:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
     form = AccommodationForm()
     if form.validate_on_submit():
         try:
@@ -884,7 +801,6 @@ def admin_new_accommodation():
                 current_occupancy=form.current_occupancy.data,
                 admin_id=current_user.id
             )
-            
             amenities = []
             if form.wifi.data == '1': amenities.append('wifi')
             if form.parking.data == '1': amenities.append('parking')
@@ -895,7 +811,6 @@ def admin_new_accommodation():
             if form.pool.data == '1': amenities.append('pool')
             if form.study_area.data == '1': amenities.append('study_area')
             acc.set_amenities_list(amenities)
-            
             image_url = request.form.get('image_url')
             if image_url:
                 image_url = image_url.strip()
@@ -903,19 +818,14 @@ def admin_new_accommodation():
                     flash('Image URL is too long. Please use a different image.', 'danger')
                     return render_template('admin/accommodation_form.html', form=form, title='New Accommodation')
                 acc.image_filename = image_url
-                logger.info(f"Image URL saved from Cloudinary: {image_url}")
-            
             db.session.add(acc)
             db.session.commit()
-            logger.info(f"New accommodation created: {acc.title}")
             flash('Accommodation added successfully!', 'success')
             return redirect(url_for('admin_manage_accommodations'))
         except Exception as e:
             logger.error(f"Error creating accommodation: {e}")
-            logger.error(traceback.format_exc())
             db.session.rollback()
             flash('Failed to add accommodation.', 'danger')
-    
     return render_template('admin/accommodation_form.html', form=form, title='New Accommodation')
 
 @app.route('/admin/accommodation/<int:id>/edit', methods=['GET', 'POST'])
@@ -924,11 +834,9 @@ def admin_edit_accommodation(id):
     if not current_user.is_admin:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
     try:
         acc = Accommodation.query.get_or_404(id)
         form = AccommodationForm(obj=acc)
-        
         if form.validate_on_submit():
             acc.title = form.title.data
             acc.description = form.description.data
@@ -937,7 +845,6 @@ def admin_edit_accommodation(id):
             acc.price_per_month = form.price_per_month.data
             acc.capacity = form.capacity.data
             acc.current_occupancy = form.current_occupancy.data
-            
             amenities = []
             if form.wifi.data == '1': amenities.append('wifi')
             if form.parking.data == '1': amenities.append('parking')
@@ -948,7 +855,6 @@ def admin_edit_accommodation(id):
             if form.pool.data == '1': amenities.append('pool')
             if form.study_area.data == '1': amenities.append('study_area')
             acc.set_amenities_list(amenities)
-            
             image_url = request.form.get('image_url')
             if image_url:
                 image_url = image_url.strip()
@@ -956,18 +862,12 @@ def admin_edit_accommodation(id):
                     if len(image_url) > 500:
                         flash('Image URL is too long. Please use a different image.', 'danger')
                         return render_template('admin/accommodation_form.html', form=form, title='Edit Accommodation', accommodation=acc)
-                    
                     if acc.image_filename and 'cloudinary' in acc.image_filename:
                         delete_image(acc.image_filename)
-                    
                     acc.image_filename = image_url
-                    logger.info(f"Image updated from Cloudinary: {image_url}")
-            
             db.session.commit()
-            logger.info(f"Accommodation updated: {acc.title}")
             flash('Accommodation updated successfully!', 'success')
             return redirect(url_for('admin_manage_accommodations'))
-        
         current_amenities = acc.get_amenities_list()
         form.wifi.data = '1' if 'wifi' in current_amenities else '0'
         form.parking.data = '1' if 'parking' in current_amenities else '0'
@@ -977,11 +877,9 @@ def admin_edit_accommodation(id):
         form.security.data = '1' if 'security' in current_amenities else '0'
         form.pool.data = '1' if 'pool' in current_amenities else '0'
         form.study_area.data = '1' if 'study_area' in current_amenities else '0'
-        
         return render_template('admin/accommodation_form.html', form=form, title='Edit Accommodation', accommodation=acc)
     except Exception as e:
         logger.error(f"Edit accommodation error: {e}")
-        logger.error(traceback.format_exc())
         db.session.rollback()
         flash('Error updating accommodation.', 'danger')
         return redirect(url_for('admin_manage_accommodations'))
@@ -992,17 +890,12 @@ def admin_delete_accommodation(id):
     if not current_user.is_admin:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
     try:
         acc = Accommodation.query.get_or_404(id)
-        
         if acc.image_filename and 'cloudinary' in acc.image_filename:
             delete_image(acc.image_filename)
-            logger.info(f"Deleted image from Cloudinary: {acc.image_filename}")
-        
         db.session.delete(acc)
         db.session.commit()
-        logger.info(f"Accommodation deleted: {id}")
         flash('Accommodation deleted successfully!', 'success')
         return redirect(url_for('admin_manage_accommodations'))
     except Exception as e:
@@ -1017,7 +910,6 @@ def admin_users():
     if not current_user.is_admin:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
     try:
         users = User.query.all()
         return render_template('admin/users.html', users=users)
@@ -1032,16 +924,13 @@ def admin_promote_user(id):
     if not current_user.is_admin:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
     try:
         user = User.query.get_or_404(id)
         if user.id == current_user.id:
             flash('You cannot modify your own admin status.', 'warning')
             return redirect(url_for('admin_users'))
-        
         user.is_admin = True
         db.session.commit()
-        logger.info(f"User promoted to admin: {user.email}")
         flash(f'{user.full_name} is now an admin.', 'success')
         return redirect(url_for('admin_users'))
     except Exception as e:
@@ -1056,16 +945,13 @@ def admin_demote_user(id):
     if not current_user.is_admin:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
     try:
         user = User.query.get_or_404(id)
         if user.id == current_user.id:
             flash('You cannot modify your own admin status.', 'warning')
             return redirect(url_for('admin_users'))
-        
         user.is_admin = False
         db.session.commit()
-        logger.info(f"User demoted from admin: {user.email}")
         flash(f'{user.full_name} is no longer an admin.', 'success')
         return redirect(url_for('admin_users'))
     except Exception as e:
@@ -1080,7 +966,6 @@ def admin_bookings():
     if not current_user.is_admin:
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
-    
     try:
         bookings = Booking.query.order_by(Booking.created_at.desc()).all()
         return render_template('admin/bookings.html', bookings=bookings)
@@ -1104,9 +989,7 @@ def my_bookings():
         flash('Error loading your bookings.', 'danger')
         return render_template('my_bookings.html', bookings=[])
 
-# Production entry point
 def create_app():
-    """Application factory for production"""
     return app
 
 if __name__ == '__main__':
