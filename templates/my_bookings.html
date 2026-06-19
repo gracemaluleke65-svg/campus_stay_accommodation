@@ -5,66 +5,55 @@
 {% block extra_css %}
 <style>
     .bookings-header {
-        background: linear-gradient(135deg, var(--light-bg) 0%, #FFFFFF 100%);
+        background: var(--light);
         padding: 3rem 0 2rem;
         margin-bottom: 2rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
     }
-
     .bookings-title {
         font-size: 2.5rem;
-        font-weight: 800;
-        color: var(--dark-text);
+        font-weight: 700;
+        color: var(--dark);
+        font-family: 'Montserrat', sans-serif;
         margin-bottom: 0.5rem;
     }
-
     .bookings-subtitle {
-        color: var(--gray-text);
+        color: #6c757d;
         font-size: 1.125rem;
     }
-
     .booking-card {
         background: white;
         border-radius: 20px;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        box-shadow: var(--shadow);
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 0 45px rgba(0,0,0,.08);
         transition: all 0.3s ease;
         overflow: hidden;
         margin-bottom: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
     }
-
     .booking-card:hover {
         transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
+        box-shadow: 0 0 45px rgba(0,0,0,.12);
     }
-
     .booking-image {
         width: 200px;
         min-height: 180px;
         position: relative;
         overflow: hidden;
         background: #f0f0f0;
+        flex-shrink: 0;
     }
-
     .booking-image img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         position: absolute;
-        top: 0;
-        left: 0;
+        top: 0; left: 0;
         transition: transform 0.3s ease;
     }
-
-    .booking-card:hover .booking-image img {
-        transform: scale(1.05);
-    }
-
-    .booking-content {
-        padding: 1.5rem;
-        flex: 1;
-    }
-
+    .booking-card:hover .booking-image img { transform: scale(1.05); }
+    .booking-content { padding: 1.5rem; flex: 1; }
     .booking-header {
         display: flex;
         justify-content: space-between;
@@ -73,19 +62,15 @@
         flex-wrap: wrap;
         gap: 0.5rem;
     }
-
     .booking-title {
         font-size: 1.25rem;
         font-weight: 700;
-        color: var(--dark-text);
+        color: var(--dark);
         text-decoration: none;
         transition: color 0.3s ease;
+        font-family: 'Montserrat', sans-serif;
     }
-
-    .booking-title:hover {
-        color: var(--primary-orange);
-    }
-
+    .booking-title:hover { color: var(--primary); }
     .status-badge {
         padding: 0.5rem 1rem;
         border-radius: 50px;
@@ -97,83 +82,68 @@
         align-items: center;
         gap: 0.375rem;
     }
-
     .status-paid {
         background: #DEF7EC;
         color: #03543F;
     }
-
     .status-pending {
         background: #FDF6B2;
         color: #8E4B10;
     }
-
     .status-cancelled {
         background: #F3F4F6;
         color: #6B7280;
     }
-
     .booking-details {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
         gap: 1.5rem;
         margin-bottom: 1.5rem;
     }
-
     .detail-item {
         display: flex;
         align-items: center;
         gap: 0.75rem;
     }
-
     .detail-icon {
         width: 40px;
         height: 40px;
-        background: rgba(255, 107, 53, 0.1);
+        background: rgba(254,161,22,0.1);
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--primary-orange);
+        color: var(--primary);
         font-size: 1.125rem;
     }
-
     .detail-content p {
         margin: 0;
         font-size: 0.875rem;
-        color: var(--gray-text);
+        color: #6c757d;
     }
-
     .detail-content h5 {
         margin: 0;
         font-size: 1rem;
         font-weight: 700;
-        color: var(--dark-text);
+        color: var(--dark);
     }
-
     .booking-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding-top: 1.25rem;
-        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        border-top: 1px solid rgba(0,0,0,0.05);
         flex-wrap: wrap;
         gap: 1rem;
     }
-
     .booking-date {
-        color: var(--gray-text);
+        color: #6c757d;
         font-size: 0.875rem;
         display: flex;
         align-items: center;
         gap: 0.375rem;
     }
-
-    .booking-actions {
-        display: flex;
-        gap: 0.75rem;
-    }
-
+    .booking-actions { display: flex; gap: 0.75rem; }
     .btn-action {
         padding: 0.625rem 1.25rem;
         border-radius: 10px;
@@ -187,93 +157,68 @@
         border: none;
         cursor: pointer;
     }
-
     .btn-view {
-        background: rgba(255, 107, 53, 0.1);
-        color: var(--primary-orange);
+        background: rgba(254,161,22,0.1);
+        color: var(--primary);
     }
-
     .btn-view:hover {
-        background: var(--primary-orange);
+        background: var(--primary);
         color: white;
         transform: translateY(-2px);
     }
-
     .btn-review {
-        background: linear-gradient(135deg, var(--primary-orange) 0%, var(--primary-orange-dark) 100%);
+        background: var(--primary);
         color: white;
-        box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        box-shadow: 0 4px 12px rgba(254,161,22,0.3);
     }
-
     .btn-review:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        box-shadow: 0 6px 20px rgba(254,161,22,0.4);
         color: white;
     }
-
-    /* Empty State */
     .empty-state {
         text-align: center;
         padding: 5rem 2rem;
         background: white;
         border-radius: 24px;
-        border: 2px dashed rgba(0, 0, 0, 0.1);
+        border: 2px dashed rgba(0,0,0,0.1);
     }
-
     .empty-icon {
         width: 120px;
         height: 120px;
-        background: rgba(255, 107, 53, 0.1);
+        background: rgba(254,161,22,0.1);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto 2rem;
-        color: var(--primary-orange);
+        color: var(--primary);
         font-size: 3rem;
     }
-
     .empty-title {
         font-size: 1.5rem;
         font-weight: 700;
-        color: var(--dark-text);
+        color: var(--dark);
         margin-bottom: 0.5rem;
+        font-family: 'Montserrat', sans-serif;
     }
-
-    .empty-text {
-        color: var(--gray-text);
-        margin-bottom: 2rem;
-        max-width: 400px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    /* Stats Cards */
-    .stats-row {
-        margin-bottom: 3rem;
-    }
-
+    .empty-text { color: #6c757d; max-width: 400px; margin: 0 auto 2rem; }
+    .stats-row { margin-bottom: 3rem; }
     .stat-card {
         background: white;
         border-radius: 16px;
         padding: 1.5rem;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        box-shadow: var(--shadow-sm);
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 0 45px rgba(0,0,0,.08);
         transition: all 0.3s ease;
     }
-
-    .stat-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow);
-    }
-
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 0 45px rgba(0,0,0,.12); }
     .stat-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         margin-bottom: 1rem;
     }
-
     .stat-icon {
         width: 48px;
         height: 48px;
@@ -283,95 +228,28 @@
         justify-content: center;
         font-size: 1.5rem;
     }
-
-    .stat-icon.primary {
-        background: rgba(255, 107, 53, 0.1);
-        color: var(--primary-orange);
-    }
-
-    .stat-icon.success {
-        background: rgba(16, 185, 129, 0.1);
-        color: #10B981;
-    }
-
-    .stat-icon.warning {
-        background: rgba(245, 158, 11, 0.1);
-        color: #F59E0B;
-    }
-
-    .stat-label {
-        color: var(--gray-text);
-        font-size: 0.875rem;
-        font-weight: 500;
-        margin-bottom: 0.25rem;
-    }
-
-    .stat-value {
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: var(--dark-text);
-    }
-
-    /* Mobile Responsive */
+    .stat-icon.primary { background: rgba(254,161,22,0.1); color: var(--primary); }
+    .stat-icon.success { background: rgba(16,185,129,0.1); color: #10B981; }
+    .stat-icon.warning { background: rgba(245,158,11,0.1); color: #F59E0B; }
+    .stat-label { color: #6c757d; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.25rem; }
+    .stat-value { font-size: 1.75rem; font-weight: 800; color: var(--dark); }
     @media (max-width: 768px) {
-        .booking-card {
-            flex-direction: column;
-        }
-
-        .booking-image {
-            width: 100%;
-            height: 200px;
-            min-height: 200px;
-        }
-
-        .booking-details {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-
-        .booking-header {
-            flex-direction: column;
-        }
-
-        .booking-footer {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .booking-actions {
-            width: 100%;
-        }
-
-        .btn-action {
-            flex: 1;
-            justify-content: center;
-        }
-
-        .bookings-title {
-            font-size: 2rem;
-        }
+        .booking-card { flex-direction: column; }
+        .booking-image { width: 100%; height: 200px; min-height: 200px; }
+        .booking-details { grid-template-columns: 1fr; }
+        .booking-header { flex-direction: column; }
+        .booking-footer { flex-direction: column; align-items: flex-start; }
+        .booking-actions { width: 100%; }
+        .btn-action { flex: 1; justify-content: center; }
     }
-
-    @media (max-width: 576px) {
-        .booking-content {
-            padding: 1rem;
-        }
-
-        .detail-item {
-            font-size: 0.875rem;
-        }
-
-        .detail-icon {
-            width: 36px;
-            height: 36px;
-            font-size: 1rem;
-        }
+    /* Extra spacing to prevent footer overlap */
+    .bookings-content {
+        padding-bottom: 3rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Header Section -->
 <section class="bookings-header">
     <div class="container">
         <div class="row align-items-center">
@@ -380,187 +258,127 @@
                 <p class="bookings-subtitle">Manage your accommodations and track your booking history</p>
             </div>
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                <a href="{{ url_for('accommodations') }}" class="btn btn-primary-orange">
-                    <i class="bi bi-plus-lg me-2"></i>Book New
+                <a href="{{ url_for('accommodations') }}" class="btn btn-primary">
+                    <i class="fa fa-plus me-2"></i>Book New
                 </a>
             </div>
         </div>
     </div>
 </section>
 
-<div class="container mb-5">
+<div class="container mb-5 bookings-content">
     {% if bookings %}
-        <!-- Statistics Row -->
-        <div class="row g-4 stats-row">
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <div>
-                            <p class="stat-label">Total Bookings</p>
-                            <h3 class="stat-value">{{ bookings|length }}</h3>
-                        </div>
-                        <div class="stat-icon primary">
-                            <i class="bi bi-calendar-check"></i>
-                        </div>
+    <div class="row g-4 stats-row">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <p class="stat-label">Total Bookings</p>
+                        <h3 class="stat-value">{{ bookings|length }}</h3>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <div>
-                            <p class="stat-label">Active</p>
-                            <h3 class="stat-value">{{ bookings|selectattr("status", "equalto", "paid")|list|length }}</h3>
-                        </div>
-                        <div class="stat-icon success">
-                            <i class="bi bi-check-circle"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <div>
-                            <p class="stat-label">Pending</p>
-                            <h3 class="stat-value">{{ bookings|selectattr("status", "equalto", "approved")|list|length }}</h3>
-                        </div>
-                        <div class="stat-icon warning">
-                            <i class="bi bi-clock"></i>
-                        </div>
-                    </div>
+                    <div class="stat-icon primary"><i class="fa fa-calendar-check"></i></div>
                 </div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <p class="stat-label">Active</p>
+                        <h3 class="stat-value">{{ bookings|selectattr("status", "equalto", "paid")|list|length }}</h3>
+                    </div>
+                    <div class="stat-icon success"><i class="fa fa-check-circle"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <p class="stat-label">Pending</p>
+                        <h3 class="stat-value">{{ bookings|selectattr("status", "equalto", "approved")|list|length }}</h3>
+                    </div>
+                    <div class="stat-icon warning"><i class="fa fa-clock"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Bookings List -->
-        <div class="bookings-list">
-            {% for booking in bookings %}
-            <div class="booking-card d-flex flex-wrap">
-                <div class="booking-image">
-                    {% if booking.accommodation.image_filename %}
-                        {% if booking.accommodation.image_filename.startswith('http://') or booking.accommodation.image_filename.startswith('https://') or 'cloudinary' in booking.accommodation.image_filename %}
-                            <img src="{{ booking.accommodation.image_filename }}" 
-                                 alt="{{ booking.accommodation.title }}"
-                                 loading="lazy"
-                                 onerror="this.src='https://placehold.co/600x400/FF6B35/FFFFFF?text=Image+Error'">
-                        {% else %}
-                            <img src="{{ url_for('static', filename='uploads/' + booking.accommodation.image_filename) }}" 
-                                 alt="{{ booking.accommodation.title }}"
-                                 loading="lazy"
-                                 onerror="this.src='https://placehold.co/600x400/FF6B35/FFFFFF?text=No+Image'">
-                        {% endif %}
+    <div class="bookings-list">
+        {% for booking in bookings %}
+        <div class="booking-card">
+            <div class="booking-image">
+                {% if booking.accommodation.image_filename %}
+                    {% if booking.accommodation.image_filename.startswith('http') %}
+                        <img src="{{ booking.accommodation.image_filename }}" alt="{{ booking.accommodation.title }}" loading="lazy" onerror="this.src='https://placehold.co/600x400/fea116/FFFFFF?text=Image+Error'">
                     {% else %}
-                        <img src="https://placehold.co/600x400/FF6B35/FFFFFF?text=No+Image" 
-                             alt="{{ booking.accommodation.title }}"
-                             loading="lazy">
+                        <img src="{{ url_for('static', filename='uploads/' + booking.accommodation.image_filename) }}" alt="{{ booking.accommodation.title }}" loading="lazy" onerror="this.src='https://placehold.co/600x400/fea116/FFFFFF?text=No+Image'">
+                    {% endif %}
+                {% else %}
+                    <img src="https://placehold.co/600x400/fea116/FFFFFF?text=No+Image" alt="{{ booking.accommodation.title }}" loading="lazy">
+                {% endif %}
+            </div>
+            <div class="booking-content">
+                <div class="booking-header">
+                    <div>
+                        <a href="{{ url_for('accommodation_detail', id=booking.accommodation_id) }}" class="booking-title">
+                            {{ booking.accommodation.title }}
+                        </a>
+                        <div class="mt-1 text-muted small"><i class="fa fa-map-marker-alt me-1"></i>{{ booking.accommodation.location }}</div>
+                    </div>
+                    {% if booking.status == 'paid' %}
+                        <span class="status-badge status-paid"><i class="fa fa-check-circle"></i> Paid</span>
+                    {% elif booking.status == 'approved' %}
+                        <span class="status-badge status-pending"><i class="fa fa-clock"></i> Pending Payment</span>
+                    {% else %}
+                        <span class="status-badge status-cancelled"><i class="fa fa-times-circle"></i> Cancelled</span>
                     {% endif %}
                 </div>
-                <div class="booking-content">
-                    <div class="booking-header">
-                        <div>
-                            <a href="{{ url_for('accommodation_detail', id=booking.accommodation_id) }}" class="booking-title">
-                                {{ booking.accommodation.title }}
-                            </a>
-                            <div class="mt-1 text-muted small">
-                                <i class="bi bi-geo-alt me-1"></i>{{ booking.accommodation.location }}
-                            </div>
-                        </div>
-                        {% if booking.status == 'paid' %}
-                            <span class="status-badge status-paid">
-                                <i class="bi bi-check-circle-fill"></i> Paid
-                            </span>
-                        {% elif booking.status == 'approved' %}
-                            <span class="status-badge status-pending">
-                                <i class="bi bi-clock-fill"></i> Pending Payment
-                            </span>
-                        {% else %}
-                            <span class="status-badge status-cancelled">
-                                <i class="bi bi-x-circle-fill"></i> Cancelled
-                            </span>
-                        {% endif %}
-                    </div>
 
-                    <div class="booking-details">
-                        <div class="detail-item">
-                            <div class="detail-icon">
-                                <i class="bi bi-calendar3"></i>
-                            </div>
-                            <div class="detail-content">
-                                <p>Duration</p>
-                                <h5>{{ booking.duration.title() }} ({{ booking.months }} months)</h5>
-                            </div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-icon">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-                            <div class="detail-content">
-                                <p>Total Price</p>
-                                <h5 style="color: var(--primary-orange);">R {{ "%.2f"|format(booking.total_price) }}</h5>
-                            </div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-icon">
-                                <i class="bi bi-door-open"></i>
-                            </div>
-                            <div class="detail-content">
-                                <p>Room Type</p>
-                                <h5>{{ booking.accommodation.room_type|title }}</h5>
-                            </div>
+                <div class="booking-details">
+                    <div class="detail-item">
+                        <div class="detail-icon"><i class="fa fa-calendar-alt"></i></div>
+                        <div class="detail-content">
+                            <p>Duration</p>
+                            <h5>{{ booking.duration.title() }} ({{ booking.months }} months)</h5>
                         </div>
                     </div>
-
-                    <div class="booking-footer">
-                        <div class="booking-date">
-                            <i class="bi bi-calendar-check"></i>
-                            Booked on {{ booking.created_at.strftime('%d %b %Y') }}
+                    <div class="detail-item">
+                        <div class="detail-icon"><i class="fa fa-money-bill-wave"></i></div>
+                        <div class="detail-content">
+                            <p>Total Price</p>
+                            <h5 style="color: var(--primary);">R {{ "%.2f"|format(booking.total_price) }}</h5>
                         </div>
-                        <div class="booking-actions">
-                            <a href="{{ url_for('accommodation_detail', id=booking.accommodation_id) }}" class="btn-action btn-view">
-                                <i class="bi bi-eye"></i> View Property
-                            </a>
-                            {% if booking.status == 'paid' and not booking.accommodation.reviews|selectattr("user_id", "equalto", current_user.id)|list|length %}
-                                <a href="{{ url_for('accommodation_detail', id=booking.accommodation_id) }}#review" class="btn-action btn-review">
-                                    <i class="bi bi-star-fill"></i> Write Review
-                                </a>
-                            {% endif %}
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-icon"><i class="fa fa-door-open"></i></div>
+                        <div class="detail-content">
+                            <p>Room Type</p>
+                            <h5>{{ booking.accommodation.room_type|title }}</h5>
                         </div>
                     </div>
                 </div>
+
+                <div class="booking-footer">
+                    <div class="booking-date"><i class="fa fa-calendar-check"></i> Booked on {{ booking.created_at.strftime('%d %b %Y') }}</div>
+                    <div class="booking-actions">
+                        <a href="{{ url_for('accommodation_detail', id=booking.accommodation_id) }}" class="btn-action btn-view"><i class="fa fa-eye"></i> View Property</a>
+                        {% if booking.status == 'paid' and not booking.accommodation.reviews|selectattr("user_id", "equalto", current_user.id)|list|length %}
+                            <a href="{{ url_for('accommodation_detail', id=booking.accommodation_id) }}#review" class="btn-action btn-review"><i class="fa fa-star"></i> Write Review</a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-            {% endfor %}
         </div>
+        {% endfor %}
+    </div>
     {% else %}
-        <!-- Empty State -->
-        <div class="empty-state">
-            <div class="empty-icon">
-                <i class="bi bi-calendar-x"></i>
-            </div>
-            <h3 class="empty-title">No Bookings Yet</h3>
-            <p class="empty-text">You haven't made any accommodation bookings. Start browsing to find your perfect student home!</p>
-            <a href="{{ url_for('accommodations') }}" class="btn btn-primary-orange btn-lg">
-                <i class="bi bi-search me-2"></i>Browse Accommodations
-            </a>
-        </div>
+    <div class="empty-state">
+        <div class="empty-icon"><i class="fa fa-calendar-times"></i></div>
+        <h3 class="empty-title">No Bookings Yet</h3>
+        <p class="empty-text">You haven't made any accommodation bookings. Start browsing to find your perfect student home!</p>
+        <a href="{{ url_for('accommodations') }}" class="btn btn-primary btn-lg"><i class="fa fa-search me-2"></i>Browse Accommodations</a>
+    </div>
     {% endif %}
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Add animation on scroll
-    document.addEventListener('DOMContentLoaded', function() {
-        const cards = document.querySelectorAll('.booking-card');
-        cards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            setTimeout(() => {
-                card.style.transition = 'all 0.6s ease';
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-            }, index * 100);
-        });
-    });
-</script>
 {% endblock %}

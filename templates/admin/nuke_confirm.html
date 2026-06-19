@@ -1,178 +1,107 @@
 {% extends "base.html" %}
 
-{% block title %}⚠️ Nuke All Data{% endblock %}
+{% block title %}Nuke All Data - Admin{% endblock %}
 
 {% block extra_css %}
 <style>
-    .nuke-container {
-        max-width: 600px;
-        margin: 3rem auto;
-    }
-    
-    .nuke-warning {
-        background: #fff3cd;
-        border: 3px solid #dc3545;
-        border-radius: 20px;
-        padding: 3rem;
-        text-align: center;
-        animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
-        50% { box-shadow: 0 0 0 20px rgba(220, 53, 69, 0); }
-    }
-    
-    .nuke-icon {
-        font-size: 5rem;
-        color: #dc3545;
-        margin-bottom: 1rem;
-    }
-    
-    .stats-list {
+    .nuke-page { background: var(--light); min-height: calc(100vh - 76px); padding: 3rem 0; }
+    .nuke-card {
         background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin: 2rem 0;
-        text-align: left;
+        border-radius: 24px;
+        box-shadow: 0 0 45px rgba(0,0,0,.08);
+        padding: 3rem;
+        max-width: 700px;
+        margin: 0 auto;
+        text-align: center;
     }
-    
-    .stat-item {
+    .nuke-icon {
+        width: 100px; height: 100px;
+        background: rgba(220,53,69,0.1);
+        border-radius: 50%;
         display: flex;
-        justify-content: space-between;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .stat-item:last-child {
-        border-bottom: none;
-    }
-    
-    .stat-count {
-        font-weight: bold;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
         color: #dc3545;
+        font-size: 3rem;
     }
-    
-    .confirmation-box {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 2rem;
+    .nuke-title { font-size: 2rem; font-weight: 700; color: #dc3545; font-family:'Montserrat',sans-serif; margin-bottom: 1rem; }
+    .nuke-text { color: #6c757d; margin-bottom: 2rem; }
+    .stats-box {
+        background: var(--light);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
+        gap: 1rem;
+    }
+    .stats-box .stat { text-align: center; }
+    .stats-box .stat .number { font-size: 1.5rem; font-weight: 700; color: #dc3545; }
+    .stats-box .stat .label { font-size: 0.875rem; color: #6c757d; }
+    .nuke-form {
+        background: #FFF5F5;
+        border: 2px solid #FECACA;
+        border-radius: 16px;
+        padding: 1.5rem;
         margin-top: 2rem;
     }
-    
-    .nuke-input {
-        font-size: 1.5rem;
+    .nuke-form label { font-weight: 600; color: var(--dark); }
+    .nuke-form input {
+        border: 2px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 0.875rem 1rem;
+        width: 100%;
         text-align: center;
-        letter-spacing: 0.5rem;
-        font-weight: bold;
-        text-transform: uppercase;
+        font-family: monospace;
+        letter-spacing: 2px;
+        margin-top: 0.5rem;
     }
-    
+    .nuke-form input:focus { border-color: #dc3545; outline: none; box-shadow: 0 0 0 3px rgba(220,53,69,0.15); }
     .btn-nuke {
         background: #dc3545;
         color: white;
-        padding: 1rem 3rem;
-        font-size: 1.25rem;
-        font-weight: bold;
         border: none;
+        padding: 1rem 2rem;
         border-radius: 12px;
-        width: 100%;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
         margin-top: 1rem;
+        width: 100%;
     }
-    
-    .btn-nuke:hover:not(:disabled) {
-        background: #c82333;
-    }
-    
-    .btn-nuke:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    
-    .btn-cancel {
+    .btn-nuke:hover { background: #c82333; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(220,53,69,0.3); }
+    .btn-cancel-nuke {
         display: inline-block;
         margin-top: 1rem;
-        padding: 0.75rem 2rem;
-        background: #6c757d;
-        color: white;
+        color: #6c757d;
         text-decoration: none;
-        border-radius: 8px;
+        font-weight: 600;
     }
+    .btn-cancel-nuke:hover { color: var(--primary); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container nuke-container">
-    <div class="nuke-warning">
-        <div class="nuke-icon">☢️</div>
-        <h1 class="text-danger">WARNING!</h1>
-        <h3>Nuclear Option Activated</h3>
-        <p class="lead">This will <strong>PERMANENTLY DELETE</strong> all data from the database. This action <strong>CANNOT BE UNDONE</strong>.</p>
-        
-        <div class="stats-list">
-            <h5 class="text-center mb-3">Data to be destroyed:</h5>
-            <div class="stat-item">
-                <span><i class="bi bi-building text-danger"></i> Accommodations</span>
-                <span class="stat-count">{{ stats.accommodations }}</span>
+<div class="nuke-page">
+    <div class="container">
+        <div class="nuke-card">
+            <div class="nuke-icon"><i class="fa fa-exclamation-triangle"></i></div>
+            <h1 class="nuke-title">⚠️ Nuke All Data</h1>
+            <p class="nuke-text">This action will permanently delete <strong>all</strong> accommodations, bookings, reviews, and favorites. This cannot be undone.</p>
+            <div class="stats-box">
+                <div class="stat"><div class="number">{{ stats.accommodations }}</div><div class="label">Accommodations</div></div>
+                <div class="stat"><div class="number">{{ stats.bookings }}</div><div class="label">Bookings</div></div>
+                <div class="stat"><div class="number">{{ stats.reviews }}</div><div class="label">Reviews</div></div>
+                <div class="stat"><div class="number">{{ stats.favorites }}</div><div class="label">Favorites</div></div>
             </div>
-            <div class="stat-item">
-                <span><i class="bi bi-calendar-check text-danger"></i> Bookings</span>
-                <span class="stat-count">{{ stats.bookings }}</span>
-            </div>
-            <div class="stat-item">
-                <span><i class="bi bi-star text-danger"></i> Reviews</span>
-                <span class="stat-count">{{ stats.reviews }}</span>
-            </div>
-            <div class="stat-item">
-                <span><i class="bi bi-heart text-danger"></i> Favorites</span>
-                <span class="stat-count">{{ stats.favorites }}</span>
-            </div>
-        </div>
-        
-        <div class="confirmation-box">
-            <p class="fw-bold mb-3">To confirm destruction, type <code class="bg-dark text-white px-2 py-1 rounded">NUKE</code> below:</p>
-            <form method="POST" id="nukeForm">
-                <input type="text" 
-                       name="confirmation" 
-                       id="confirmation" 
-                       class="form-control nuke-input" 
-                       placeholder="TYPE NUKE"
-                       autocomplete="off">
-                <button type="submit" class="btn-nuke" id="nukeBtn" disabled>
-                    <i class="bi bi-exclamation-triangle-fill"></i> 
-                    CONFIRM DESTRUCTION
-                </button>
+            <form method="POST" action="{{ url_for('admin_nuke_data') }}" class="nuke-form">
+                <label for="confirmation">Type <strong>NUKE</strong> to confirm</label>
+                <input type="text" name="confirmation" id="confirmation" placeholder="NUKE" required>
+                <button type="submit" class="btn-nuke"><i class="fa fa-trash-alt me-2"></i> Confirm Nuke</button>
             </form>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn-cancel-nuke"><i class="fa fa-arrow-left me-2"></i> Cancel and go back</a>
         </div>
-        
-        <a href="{{ url_for('admin_dashboard') }}" class="btn-cancel">
-            <i class="bi bi-arrow-left"></i> Cancel and Go Back
-        </a>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    const confirmationInput = document.getElementById('confirmation');
-    const nukeBtn = document.getElementById('nukeBtn');
-    
-    confirmationInput.addEventListener('input', function() {
-        if (this.value === 'NUKE') {
-            nukeBtn.disabled = false;
-            nukeBtn.classList.add('animate__animated', 'animate__pulse');
-        } else {
-            nukeBtn.disabled = true;
-        }
-    });
-    
-    document.getElementById('nukeForm').addEventListener('submit', function(e) {
-        if (confirmationInput.value !== 'NUKE') {
-            e.preventDefault();
-            alert('You must type NUKE to confirm!');
-            return false;
-        }
-        return confirm('FINAL WARNING: Are you absolutely sure? This is irreversible!');
-    });
-</script>
 {% endblock %}

@@ -8,7 +8,7 @@
         min-height: calc(100vh - 76px);
         display: flex;
         align-items: center;
-        background: linear-gradient(135deg, #F0FDF4 0%, #FFFFFF 50%, #FFF5F2 100%);
+        background: var(--light);
         padding: 2rem 0;
         position: relative;
         overflow: hidden;
@@ -32,18 +32,15 @@
         left: -5%;
         width: 300px;
         height: 300px;
-        background: radial-gradient(circle, rgba(255, 107, 53, 0.08) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(254, 161, 22, 0.08) 0%, transparent 70%);
         border-radius: 50%;
     }
 
     .success-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
+        background: white;
         border-radius: 32px;
         border: 1px solid rgba(255, 255, 255, 0.5);
-        box-shadow: 
-            0 20px 60px -15px rgba(0, 0, 0, 0.1),
-            0 0 0 1px rgba(0, 0, 0, 0.02);
+        box-shadow: 0 0 45px rgba(0, 0, 0, .08);
         padding: 4rem 3rem;
         text-align: center;
         position: relative;
@@ -52,14 +49,8 @@
     }
 
     @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .success-icon-wrapper {
@@ -71,25 +62,14 @@
         align-items: center;
         justify-content: center;
         margin: 0 auto 2rem;
-        box-shadow: 
-            0 20px 40px -10px rgba(34, 197, 94, 0.4),
-            0 0 0 20px rgba(34, 197, 94, 0.1);
+        box-shadow: 0 20px 40px -10px rgba(34, 197, 94, 0.4);
         animation: scaleIn 0.5s ease 0.2s both;
-        position: relative;
     }
 
     @keyframes scaleIn {
-        0% {
-            transform: scale(0);
-            opacity: 0;
-        }
-        50% {
-            transform: scale(1.1);
-        }
-        100% {
-            transform: scale(1);
-            opacity: 1;
-        }
+        0% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
     }
 
     .success-icon-wrapper i {
@@ -99,12 +79,8 @@
     }
 
     @keyframes checkmark {
-        0% {
-            transform: scale(0) rotate(-45deg);
-        }
-        100% {
-            transform: scale(1) rotate(0);
-        }
+        0% { transform: scale(0) rotate(-45deg); }
+        100% { transform: scale(1) rotate(0); }
     }
 
     .success-badge {
@@ -123,15 +99,16 @@
 
     .success-title {
         font-size: 2.5rem;
-        font-weight: 800;
-        color: var(--dark-text);
+        font-weight: 700;
+        color: var(--dark);
         margin-bottom: 1rem;
+        font-family: 'Montserrat', sans-serif;
         animation: fadeIn 0.5s ease 0.5s both;
     }
 
     .success-message {
         font-size: 1.25rem;
-        color: var(--gray-text);
+        color: #6c757d;
         margin-bottom: 2rem;
         max-width: 500px;
         margin-left: auto;
@@ -140,8 +117,8 @@
     }
 
     .info-box {
-        background: linear-gradient(135deg, rgba(255, 107, 53, 0.05) 0%, rgba(255, 107, 53, 0.02) 100%);
-        border: 2px dashed rgba(255, 107, 53, 0.3);
+        background: rgba(254, 161, 22, 0.05);
+        border: 2px dashed rgba(254, 161, 22, 0.3);
         border-radius: 20px;
         padding: 1.5rem;
         margin: 2rem 0;
@@ -150,12 +127,12 @@
 
     .info-box i {
         font-size: 2rem;
-        color: var(--primary-orange);
+        color: var(--primary);
         margin-bottom: 0.75rem;
     }
 
     .info-box p {
-        color: var(--dark-text);
+        color: var(--dark);
         font-weight: 500;
         margin: 0;
     }
@@ -170,7 +147,7 @@
     }
 
     .btn-success-primary {
-        background: linear-gradient(135deg, var(--primary-orange) 0%, var(--primary-orange-dark) 100%);
+        background: var(--primary);
         color: white;
         border: none;
         padding: 1rem 2rem;
@@ -182,18 +159,19 @@
         gap: 0.5rem;
         text-decoration: none;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+        box-shadow: 0 4px 20px rgba(254, 161, 22, 0.3);
     }
 
     .btn-success-primary:hover {
         transform: translateY(-3px);
-        box-shadow: 0 8px 30px rgba(255, 107, 53, 0.4);
+        box-shadow: 0 8px 30px rgba(254, 161, 22, 0.4);
         color: white;
+        background: #e08b0e;
     }
 
     .btn-success-secondary {
         background: white;
-        color: var(--dark-text);
+        color: var(--dark);
         border: 2px solid rgba(0, 0, 0, 0.1);
         padding: 1rem 2rem;
         border-radius: 16px;
@@ -207,64 +185,15 @@
     }
 
     .btn-success-secondary:hover {
-        border-color: var(--primary-orange);
-        color: var(--primary-orange);
+        border-color: var(--primary);
+        color: var(--primary);
         transform: translateY(-3px);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 
-    .confetti {
-        position: fixed;
-        width: 10px;
-        height: 10px;
-        background: var(--primary-orange);
-        position: absolute;
-        animation: confetti-fall 3s ease-out forwards;
-    }
-
-    @keyframes confetti-fall {
-        0% {
-            transform: translateY(-100px) rotate(0deg);
-            opacity: 1;
-        }
-        100% {
-            transform: translateY(100vh) rotate(720deg);
-            opacity: 0;
-        }
-    }
-
-    .booking-details {
-        background: white;
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin: 2rem 0;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        animation: fadeIn 0.5s ease 0.7s both;
-    }
-
-    .detail-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .detail-row:last-child {
-        border-bottom: none;
-    }
-
-    .detail-label {
-        color: var(--gray-text);
-        font-size: 0.875rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .detail-value {
-        font-weight: 600;
-        color: var(--dark-text);
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     @media (max-width: 768px) {
@@ -272,35 +201,20 @@
             padding: 2.5rem 1.5rem;
             margin: 1rem;
         }
-
         .success-title {
             font-size: 1.875rem;
         }
-
         .success-icon-wrapper {
             width: 100px;
             height: 100px;
         }
-
         .success-actions {
             flex-direction: column;
         }
-
         .btn-success-primary,
         .btn-success-secondary {
             width: 100%;
             justify-content: center;
-        }
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
         }
     }
 </style>
@@ -312,65 +226,50 @@
         <div class="row justify-content-center">
             <div class="col-lg-8 col-md-10">
                 <div class="success-card">
-                    <!-- Success Icon -->
                     <div class="success-icon-wrapper">
-                        <i class="bi bi-check-lg"></i>
+                        <i class="fa fa-check"></i>
                     </div>
-                    
-                    <!-- Badge -->
                     <div class="success-badge">
-                        <i class="bi bi-shield-check"></i>
+                        <i class="fa fa-shield-alt"></i>
                         Booking Confirmed
                     </div>
-                    
-                    <!-- Title -->
                     <h1 class="success-title">Payment Successful!</h1>
-                    
-                    <!-- Message -->
                     <p class="success-message">
                         Congratulations! Your booking has been confirmed and we've sent a confirmation email to your inbox.
                     </p>
-                    
-                    <!-- Info Box -->
                     <div class="info-box">
-                        <i class="bi bi-star-fill"></i>
+                        <i class="fa fa-star"></i>
                         <p>Share your experience! You can now leave a review for your accommodation.</p>
                     </div>
-                    
-                    <!-- Action Buttons -->
                     <div class="success-actions">
                         <a href="{{ url_for('accommodation_detail', id=accommodation_id) }}" class="btn-success-primary">
-                            <i class="bi bi-star-fill"></i>
+                            <i class="fa fa-star"></i>
                             Leave a Review
                         </a>
                         <a href="{{ url_for('my_bookings') }}" class="btn-success-secondary">
-                            <i class="bi bi-calendar-check"></i>
+                            <i class="fa fa-calendar-check"></i>
                             View My Bookings
                         </a>
                     </div>
-                    
-                    <!-- Trust Indicators -->
                     <div class="mt-4 pt-4 border-top">
                         <div class="row text-center g-3">
                             <div class="col-4">
-                                <i class="bi bi-shield-check text-success fs-4"></i>
+                                <i class="fa fa-shield-alt text-success fs-4"></i>
                                 <p class="small text-muted mb-0 mt-1">Secure</p>
                             </div>
                             <div class="col-4">
-                                <i class="bi bi-envelope-check text-primary-orange fs-4"></i>
+                                <i class="fa fa-envelope text-primary fs-4"></i>
                                 <p class="small text-muted mb-0 mt-1">Email Sent</p>
                             </div>
                             <div class="col-4">
-                                <i class="bi bi-headset text-primary-orange fs-4"></i>
+                                <i class="fa fa-headset text-primary fs-4"></i>
                                 <p class="small text-muted mb-0 mt-1">24/7 Support</p>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Help Text -->
                 <p class="text-center text-muted mt-4 small">
-                    Having issues? <a href="#" class="text-primary-orange fw-semibold">Contact our support team</a>
+                    Having issues? <a href="#" class="text-primary fw-semibold">Contact our support team</a>
                 </p>
             </div>
         </div>
@@ -380,10 +279,8 @@
 
 {% block extra_js %}
 <script>
-    // Create confetti effect
     function createConfetti() {
-        const colors = ['#FF6B35', '#22C55E', '#FFB627', '#004E89', '#E85A2B'];
-        
+        const colors = ['#FEA116', '#22C55E', '#FFB627', '#004E89', '#E85A2B'];
         for (let i = 0; i < 50; i++) {
             setTimeout(() => {
                 const confetti = document.createElement('div');
@@ -392,17 +289,29 @@
                 confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
                 confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.position = 'fixed';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.top = '-10px';
+                confetti.style.opacity = '0.8';
+                confetti.style.animation = 'confetti-fall 3s ease-out forwards';
                 document.querySelector('.success-page').appendChild(confetti);
-                
                 setTimeout(() => confetti.remove(), 4000);
             }, i * 50);
         }
     }
 
-    // Trigger confetti on page load
+    // Add confetti keyframes
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+
     document.addEventListener('DOMContentLoaded', createConfetti);
-    
-    // Show success toast
     showToast('Payment completed successfully!', 'success');
 </script>
 {% endblock %}
